@@ -11,14 +11,14 @@ A cooperative platformer built for browser and mobile that simulates the iconic 
 - *You control one climber; the other follows via tether!*
 
 ### 💻 Desktop
-- **Player 1:**  <mark>←</mark> / <mark>→</mark> arrows to move, <mark>Space</mark> to jump
-- **Player 2:** <mark>A</mark> / <mark>D</mark> to move, <mark>W</mark> to jump
-- **Pause:** <mark>Escape</mark> key
+- **Player 1:**  <span style="background-color: #f5f5f5">←</span> / <span style="background-color: #f5f5f5">→</span> arrows to move, <span style="background-color: #f5f5f5">Space</span> to jump
+- **Player 2:** <span style="background-color: #f5f5f5">A</span> / <span style="background-color: #f5f5f5">D</span> to move, <span style="background-color: #f5f5f5">W</span> to jump
+- **Pause:** <span style="background-color: #f5f5f5">Escape</span> key
 - *Control both players simultaneously!*
 
 ### 🏁 Goal
 - Reach the summit of **14,410 ft**
-- **Manage resources:** You begin with <mark>2 liters of water</mark> and <mark>10 snakcs</mark>
+- **Manage resources:** You begin with <span style="background-color: #f5f5f5">2 liters of water</span> and <span style="background-color: #f5f5f5">10 snakcs</span>
 - Collect tools like crampons, headlamp, and ice axe along the route
 
 ## Built With
