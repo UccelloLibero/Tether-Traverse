@@ -1,6 +1,6 @@
 # 🧗‍♀️ Tether Traverse
 
-*Navigate the slopes of Mount Rainier with you climbing partner!*
+*Navigate the slopes of Mount Rainier with you climbing partner!*\
 A cooperative platformer built for browser and mobile that simulates the iconic glacier ascent to the 14,410 ft summit of Mount Rainier. 
 
 ## 🎮 How to Play
@@ -22,18 +22,18 @@ A cooperative platformer built for browser and mobile that simulates the iconic 
 - Collect tools like crampons, headlamp, and ice axe along the route
 
 ## Built With
-- [https://threejs.org/](Three.js) - 2D/3D rendering
+- [Three.js](https://threejs.org/) - 2D/3D rendering
 - JavaScript (Vanilla)
 - HTML5/CSS3
 - Fully responsive: Playable in desktop and mobile browsers
 
 ## License
-**Creatvie Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)**
+**Creatvie Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)**\
 This means:
 - **You can remix, adapt, and build upon this game**
 - **Non-commercial use only**
-- **Credit required** (please attribute to the creator)
-More info: [https://creativecommons.org/licenses/by-nc/4.0/](creativecommons.org/licenses/by-nc/4.0)
+- **Credit required** (please attribute to the creator)\
+More info: [creativecommons.org/licenses/by-nc/4.0](https://creativecommons.org/licenses/by-nc/4.0/)
 
 ## ▶️ Play Online
-*Tether Travese* is avalible to play directly in your browser (desktop or mobile). [#](Check it out here!)
+*Tether Travese* is avalible to play directly in your browser (desktop or mobile). [Check it out here](#)
