@@ -36,4 +36,4 @@ This means:
 More info: [creativecommons.org/licenses/by-nc/4.0](https://creativecommons.org/licenses/by-nc/4.0/)
 
 ## ▶️ Play Online
-*Tether Travese* is avalible to play directly in your browser (desktop or mobile). [Check it out here](#)
+*Tether Travese* is avalible to play directly in your browser (desktop or mobile). [Check it out here!](#)

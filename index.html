@@ -7,23 +7,51 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <!-- Landing Page -->
+  <div id="landingPage">
+    <div class="landing-content">
+      <h1>🏔️ Tether Traverse</h1>
+      <p>Conquer Mount Rainier with your climbing partner!</p>
+      
+      <h2>How to Play</h2>
+      <div class="controls-section">
+        <div class="control-box">
+          <h3>📱 Mobile</h3>
+          <p><strong>Movement:</strong> Hold left/right buttons</p>
+          <p><strong>Jump:</strong> Tap jump button</p>
+          <p><strong>Pause:</strong> Double tap screen</p>
+          <p><em>You control one climber, the other follows!</em></p>
+        </div>
+        
+        <div class="control-box">
+          <h3>💻 Desktop</h3>
+          <p><strong>Player 1:</strong> Arrow Keys (←→), Space to jump</p>
+          <p><strong>Player 2:</strong> A/D keys, W to jump</p>
+          <p><strong>Pause:</strong> Escape key</p>
+          <p><em>Control both climbers simultaneously!</em></p>
+        </div>
+      </div>
+      
+      <p><strong>Goal:</strong> Reach the summit at 14,410 feet! Manage your water and snacks wisely.</p>
+      <p><strong>Starting supplies:</strong> 2 liters of water, 10 snacks</p>
+      
+      <button id="startBtn">Start Climbing!</button>
+    </div>
+  </div>
+
+  <!-- Game Canvas -->
   <canvas id="gameCanvas"></canvas>
 
   <!-- Mobile Controls -->
   <div id="mobileControls">
-    <div class="control-group">
-      <button id="p1Left">←</button>
-      <button id="p1Jump">⤴️</button>
-      <button id="p1Right">→</button>
-    </div>
-    <div class="control-group">
-      <button id="p2Left">A</button>
-      <button id="p2Jump">W</button>
-      <button id="p2Right">D</button>
+    <div class="mobile-control-group">
+      <button class="control-btn" id="mobileLeft">←</button>
+      <button class="control-btn" id="mobileJump">↑</button>
+      <button class="control-btn" id="mobileRight">→</button>
     </div>
   </div>
 
-  <!-- Level Dialog & Fade -->
+  <!-- Level Dialog -->
   <div id="overlay" class="hidden">
     <div id="dialog">
       <h2 id="levelTitle"></h2>
@@ -32,26 +60,41 @@
     </div>
   </div>
 
-  <!-- Stats Monitor UI -->
-  <div id="hud">
-  <div><strong>Location:</strong> <span id="currentLocation">Paradise Trailhead</span></div>
-  <div><strong>Next:</strong> <span id="nextLocation">Camp Muir</span></div>
-  <div><strong>Gear:</strong>
-    <ul>
-      <li>🪓 Axe: <span id="hasAxe">No</span></li>
-      <li>🍫 Snacks: <span id="snacksCount">0</span></li>
-      <li>🧊 Crampons: <span id="hasCrampons">No</span></li>
-      <li>💡 Headlamp: <span id="hasHeadlamp">No</span></li>
-    </ul>
+  <!-- Camp Muir Screen -->
+  <div id="campMuirScreen">
+    <div class="camp-content">
+      <h2>🏕️ Camp Muir</h2>
+      <p>You've reached Camp Muir at 10,080 feet!</p>
+      <p>The team sets up camp for the night. You'll need to wake at 2 AM for the summit push.</p>
+      <p>The final ascent will be in darkness, gradually revealing the sunrise as you climb.</p>
+      <p><strong>Remaining supplies:</strong> <span id="campSupplies"></span></p>
+      <button id="startNightClimbBtn">Start Night Climb</button>
+    </div>
   </div>
-  <div><strong>Water:</strong> <span id="waterCount">2</span></div>
-</div>
 
+  <!-- Pause Menu -->
+  <div id="pauseMenu">
+    <div class="pause-content">
+      <h2>Game Paused</h2>
+      <button class="pause-btn" id="resumeBtn">Resume</button>
+      <button class="pause-btn" id="restartBtn">Restart</button>
+    </div>
+  </div>
 
-  <script type="module">
-    import * as THREE from 'https://unpkg.com/three@0.155.0/build/three.module.js';
-    window.THREE = THREE;
-  </script>
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <div><strong>Elevation:</strong> <span id="currentElevation">5,400 ft</span></div>
+    <div><strong>Location:</strong> <span id="currentLocation">Paradise Trailhead</span></div>
+    <div><strong>Next:</strong> <span id="nextLocation">Panorama Point</span></div>
+    <div><strong>Supplies:</strong>
+      <ul>
+        <li>💧 Water: <span id="waterCount">2.0</span>L</li>
+        <li>🍫 Snacks: <span id="snacksCount">10</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script type="module" src="script.js"></script>
 </body>
 </html>
