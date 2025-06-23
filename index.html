@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tether Traverse</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- Mobile Controls -->
+  <div id="mobileControls">
+    <div class="control-group">
+      <button id="p1Left">←</button>
+      <button id="p1Jump">⤴️</button>
+      <button id="p1Right">→</button>
+    </div>
+    <div class="control-group">
+      <button id="p2Left">A</button>
+      <button id="p2Jump">W</button>
+      <button id="p2Right">D</button>
+    </div>
+  </div>
+
+  <!-- Level Dialog & Fade -->
+  <div id="overlay" class="hidden">
+    <div id="dialog">
+      <h2 id="levelTitle"></h2>
+      <p id="levelText"></p>
+      <button id="continueBtn">Continue</button>
+    </div>
+  </div>
+
+  <!-- Stats Monitor UI -->
+  <div id="hud">
+  <div><strong>Location:</strong> <span id="currentLocation">Paradise Trailhead</span></div>
+  <div><strong>Next:</strong> <span id="nextLocation">Camp Muir</span></div>
+  <div><strong>Gear:</strong>
+    <ul>
+      <li>🪓 Axe: <span id="hasAxe">No</span></li>
+      <li>🍫 Snacks: <span id="snacksCount">0</span></li>
+      <li>🧊 Crampons: <span id="hasCrampons">No</span></li>
+      <li>💡 Headlamp: <span id="hasHeadlamp">No</span></li>
+    </ul>
+  </div>
+  <div><strong>Water:</strong> <span id="waterCount">2</span></div>
+</div>
+
+
+  <script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.155.0/build/three.module.js';
+    window.THREE = THREE;
+  </script>
+  <script type="module" src="script.js"></script>
+</body>
+</html>
