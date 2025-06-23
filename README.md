@@ -11,14 +11,14 @@ A cooperative platformer built for browser and mobile that simulates the iconic 
 - *You control one climber; the other follows via tether!*
 
 ### 💻 Desktop
-- **Player 1:**  <span style="background-color: #d3d3d3">←</span> / <span style="background-color: #d3d3d3">→</span> arrows to move, <span style="background-color: #d3d3d3">Space</span> to jump
-- **Player 2:** <span style="background-color: #d3d3d3">A</span> / <span style="background-color: #d3d3d3">D</span> to move, <span style="background-color: #d3d3d3">W</span> to jump
-- **Pause:** <span style="background-color: #d3d3d3">Escape</span> key
+- **Player 1:**  <mark style="background-color: #d3d3d3;">←</mark> / <mark style="background-color: #d3d3d3;">→</mark> arrows to move, <mark style="background-color: #d3d3d3;">Space</mark> to jump
+- **Player 2:** <mark style="background-color: #d3d3d3;">A</mark> / <mark style="background-color: #d3d3d3;">D</mark> to move, <mark style="background-color: #d3d3d3;">W</mark> to jump
+- **Pause:** <mark style="background-color: #d3d3d3;">Escape</mark> key
 - *Control both players simultaneously!*
 
 ### 🏁 Goal
 - Reach the summit of **14,410 ft**
-- **Manage resources:** You begin with <span style="background-color: #d3d3d3">2 liters of water</span> and <span style="background-color: #d3d3d3">10 snakcs</span>
+- **Manage resources:** You begin with <mark style="background-color: #d3d3d3;">2 liters of water</mark> and <mark style="background-color: #d3d3d3;">10 snakcs</mark>
 - Collect tools like crampons, headlamp, and ice axe along the route
 
 ## Built With
