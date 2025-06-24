@@ -1,11 +1,16 @@
+import { handlePlayerMovement, addGroundedMotion, initPlayers } from './players.js';
+import { climber1, climber2} from './players.js';
+import { loadLevel1 } from './levels/level1.js';
+import { loadLevel2 } from './levels/level2.js';
+
 // Game Setup
 let scene, camera, renderer;
-let climber1, climber2, rope;
+let rope;
 let platforms = [];
 let keys = {};
 let mobileKeys = { left: false, right: false, jump: false };
 let ropeMesh;
-let bgMesh;
+let gearItems = [];
 
 // Game Flags
 let gameStarted = false;
@@ -37,9 +42,9 @@ const state = {
 // Level data
 const levels = [
   { x: 0, name: "Paradise Trailhead", elevation: 5400, waterUse: 0, snackUse: 0 },
-  { x: 15, name: "Panorama Point", elevation: 6800, waterUse: 0.5, snackUse: 2, message: "Take a break! Tatoosh Range views." },
-  { x: 30, name: "Pebble Creek", elevation: 7200, waterUse: 0.5, snackUse: 2, message: "Rest stop before snowfields." },
-  { x: 50, name: "Muir Snowfield", elevation: 8500, waterUse: 0.5, snackUse: 2, message: "Snow trek begins!" },
+  { x: 15, name: "Panorama Point", elevation: 6800, waterUse: 0.5, snackUse: 2, gear: ["headlamp", "helmet"], message: "Take a break! Tatoosh Range views." },
+  { x: 30, name: "Pebble Creek", elevation: 7200, waterUse: 0.5, snackUse: 2, gear: ["axe", "beacon"], message: "Rest stop before snowfields." },
+  { x: 50, name: "Muir Snowfield", elevation: 8500, waterUse: 0.5, snackUse: 2, gear: ["crampons", "parka", "harness"], message: "Snow trek begins!" },
   { x: 70, name: "Camp Muir", elevation: 10080, waterUse: 0.5, snackUse: 2, message: "Camp Muir reached. Prepare for night!", isCamp: true },
   { x: 90, name: "Cathedral Gap", elevation: 11000, waterUse: 0.25, snackUse: 1, night: true, message: "Cross Cathedral Gap." },
   { x: 110, name: "Ingraham Flats", elevation: 11500, waterUse: 0.25, snackUse: 1, night: true, message: "Over Ingraham Glacier!" },
@@ -51,34 +56,13 @@ const levels = [
 // Init
 function initGame() {
   const loader = new THREE.TextureLoader()
-    loader.load('MountRainier.jpg', texture => {
+    loader.load('assets/MountRainier.jpg', texture => {
     scene.background = texture;
   });
   scene = new THREE.Scene();
   // scene.background = new THREE.Color(0x87CEEB);
 
-  // const bgTexture = loader.load('MountRainier.jpg');
-  // const bgMaterial = new THREE.MeshBasicMaterial({ map: bgTexture });
-  // bgTexture.wrapS = THREE.RepeatWrapping;
-  // bgTexture.wrapT = THREE.RepeatWrapping;
-  // bgTexture.repeat.set(1, 1); // Repeat vertically to create a parallax effect
-  // bgTexture.needsUpdate = true;
-
-  // const bgGeometry = new THREE.PlaneGeometry(50, 50); // Large enough to fill camera view
-  // bgMesh = new THREE.Mesh(bgGeometry, bgMaterial);
-  // bgMesh.position.z = -10; // Send it behind all objects
-  // scene.add(bgMesh);
-
-  // const bgTexture = loader.load('MountRainier.jpg');
-  // bgTexture.wrapS = THREE.RepeatWrapping;
-  // bgTexture.wrapT = THREE.RepeatWrapping;
-  // bgTexture.repeat.set(1, 1);
-
-  // const bgMaterial = new THREE.MeshBasicMaterial({ map: bgTexture });
-  // const bgGeometry = new THREE.PlaneGeometry(300, 2000);
-  // bgMesh = new THREE.Mesh(bgGeometry, bgMaterial);
-  // bgMesh.position.set(0, 0, -5);
-  // scene.add(bgMesh);
+  initPlayers(scene, loader);
 
   camera = new THREE.OrthographicCamera(
     window.innerWidth / -100, window.innerWidth / 100,
@@ -110,102 +94,29 @@ function initGame() {
     platforms.push({ mesh: platform, y: y + h / 2, x: x });
   }
 
-  // Manually place 35 platforms for Level 1 (Paradise to Camp Muir)
-  createPlatform(4, -2);
-  createPlatform(10, -1.5);
-  createPlatform(16, -1);
-  createPlatform(22, -0.5);
-  createPlatform(28, 0);
-  createPlatform(34, 0.5);
-  createPlatform(40, 1);
-  createPlatform(46, 1.5);
-  createPlatform(52, 2);
-  createPlatform(58, 2.5);      
-  createPlatform(64, 3);
-  createPlatform(70, 3.5);
-  createPlatform(76, 4);
-  createPlatform(82, 4.5);
-  createPlatform(88, 5);
-  createPlatform(94, 5.5);
-  createPlatform(100, 6);
-  createPlatform(106, 6.5);
-  createPlatform(112, 7);
-  createPlatform(118, 7.5);
-  createPlatform(124, 8);
-  createPlatform(130, 8.5);
-  createPlatform(136, 9);
-  createPlatform(142, 10);
-  createPlatform(148, 10.5);
-  createPlatform(154, 11);
-  createPlatform(160, 12);
-  createPlatform(166, 12.5);
-  createPlatform(172, 13);
-  createPlatform(178, 14);
-  createPlatform(184, 14.5);
-  createPlatform(190, 15); 
-  createPlatform(196, 16);
-  createPlatform(202, 17);
-  createPlatform(208, 18);
-  createPlatform(214, 19);
+  // Load levels with platforms
+  loadLevel1(createPlatform);
+  const campTexture = new THREE.TextureLoader().load('assets/camp-muir.png');
+  const camp = new THREE.Sprite(new THREE.SpriteMaterial({ map: campTexture, transparent: true }));
+  camp.scale.set(6, 3, 1);
+  camp.position.set(214, 25.5, 0);
+  scene.add(camp);
 
-  // Manually place 40 platforms for Level 2 (Camp Muir to Summit)
-  createPlatform(220, 20);
-  createPlatform(226, 21);
-  createPlatform(232, 22);
-  createPlatform(238, 23);
-  createPlatform(244, 24);
-  createPlatform(250, 25);
-  createPlatform(256, 26);
-  createPlatform(262, 27);
-  createPlatform(268, 28);
-  createPlatform(274, 29);
-  createPlatform(280, 30);
-  createPlatform(286, 31);
-  createPlatform(292, 32);
-  createPlatform(298, 33);
-  createPlatform(304, 34);
-  createPlatform(310, 35);
-  createPlatform(316, 36);
-  createPlatform(322, 37);
-  createPlatform(328, 38);
-  createPlatform(334, 39);
-  createPlatform(340, 40);
-  createPlatform(346, 41);
-  createPlatform(352, 42);
-  createPlatform(358, 43);
-  createPlatform(364, 44);
-  createPlatform(370, 45);
-  createPlatform(376, 46);
-  createPlatform(382, 47);
-  createPlatform(388, 48);
-  createPlatform(394, 49);
-  createPlatform(400, 50);
-  createPlatform(406, 51);
-  createPlatform(412, 52);
-  createPlatform(418, 53);
-  createPlatform(424, 54);
-  createPlatform(430, 55);
-  createPlatform(436, 56);
-  createPlatform(442, 57);
-  createPlatform(448, 58);
-  createPlatform(454, 59);
-  createPlatform(460, 60);
+  // Camp Muir text 
+  const campText = document.createElement("div");
+  campText.textContent = "Camp Muir";
+  campText.style.position = "absolute";
+  campText.style.color = "white";
+  campText.style.fontSize = "2em";
+  campText.style.top = "10%";
+  campText.style.left = "50%";
+  campText.style.transform = "translateX(-50%)";
+  campText.style.textShadow = "0 0 6px black";
+  campText.style.display = "none"; // Hidden until Camp Muir is reached
+  campText.id = "campText";
+  document.body.appendChild(campText);
 
-  // Load textures for each climber
-  // const loader = new THREE.TextureLoader();
-  const climber1Texture = loader.load('climber1.png');
-  const climber2Texture = loader.load('climber1.png');
-
-  // Create climbers as sprites
-  climber1 = new THREE.Sprite(new THREE.SpriteMaterial({ map: climber1Texture, transparent: true }));
-  climber1.scale.set(1, 1.5, 1);
-  climber1.position.set(-2, -4.5, 0);
-  scene.add(climber1);
-
-  climber2 = new THREE.Sprite(new THREE.SpriteMaterial({ map: climber2Texture, transparent: true }));
-  climber2.scale.set(1, 1.5, 1);
-  climber2.position.set(2, -4.75, 0);
-  scene.add(climber2);
+  loadLevel2(createPlatform);
 
   // Rope (Thick and orange using TubeGeometry)
   const ropePath = new THREE.CatmullRomCurve3([
@@ -218,6 +129,8 @@ function initGame() {
   ropeMesh = new THREE.Mesh(ropeGeometry, ropeMaterial);
   scene.add(ropeMesh);
   ropeMesh.position.z = -0.1; // Slightly behind climbers
+
+  updateGearHUD();
 }
 
 // Start Game
@@ -248,51 +161,8 @@ function animate() {
 
   if (!gameStarted || gamePaused) return;
 
-  // Movement
-  if (isMobile) {
-    // Move only climber1 on mobile
-    if (mobileKeys.left) {
-      state.c1.x -= moveSpeed;
-      climber1.scale.x = -1;
-    }
-    if (mobileKeys.right) {
-      state.c1.x += moveSpeed;
-      climber1.scale.x = 1;
-    }
-    if (mobileKeys.jump && state.c1.grounded) {
-      state.c1.vy = jumpPower;
-      state.c1.grounded = false;
-    }
-    
-    // Optional: make climber2 follow climber1 softly
-    state.c2.x += (state.c1.x - state.c2.x) * 0.05;
-  } else {
-    if (keys["ArrowLeft"]) {
-      state.c1.x -= moveSpeed;
-      climber1.scale.x = -1; // ← face left
-    }
-    if (keys["ArrowRight"]) {
-      state.c1.x += moveSpeed;
-      climber1.scale.x = 1; // → face right
-    }
-    if (keys["Space"] && state.c1.grounded) {
-      state.c1.vy = jumpPower;
-      state.c1.grounded = false;
-    }
-
-    if (keys["KeyA"]) {
-      state.c2.x -= moveSpeed;
-      climber2.scale.x = -1; // ← face left
-    }
-    if (keys["KeyD"]) {
-      state.c2.x += moveSpeed;
-      climber2.scale.x = 1; // → face right
-    }
-    if (keys["KeyW"] && state.c2.grounded) {
-      state.c2.vy = jumpPower;
-      state.c2.grounded = false;
-    }
-  }
+  // Player movement
+  handlePlayerMovement(state, keys, mobileKeys, climber1, climber2, isMobile);
 
   // Gravity
   state.c1.vy += gravity;
@@ -308,29 +178,47 @@ function animate() {
   state.c1.grounded = checkCollision(climber1, state.c1);
   state.c2.grounded = checkCollision(climber2, state.c2);
 
-  // Rope physics
+  // Rope physics and rendering
   handleRopePhysics();
-
   updateRope();
   updateCamera();
 
-  // Add bounce and sway only when grounded
-  const t = Date.now() * 0.003;
-  if (state.c1.grounded) {
-    // climber1.position.y += Math.sin(t) * 0.05; // Gentle bounce
-    climber1.position.x += Math.sin(t * 0.5) * 0.03; // Sway left/right
-    climber1.position.y += Math.cos(t) * 0.01; // Gentle bounce
-  }
-  if (state.c2.grounded) {
-    // climber2.position.y += Math.sin(t + Math.PI) * 0.05; // Gentle bounce
-    climber2.position.x += Math.sin(t * 0.5 + Math.PI) * 0.03; // Sway left/right
-    climber2.position.y += Math.cos(t + Math.PI) * 0.01; // Gentle bounce
+  // Grounded motion
+  addGroundedMotion(climber1, state.c1.grounded);
+  addGroundedMotion(climber2, state.c2.grounded, Math.PI);
+
+  // Detect gear pickup
+  gearItems.filter(({ sprite, name}) => {
+    const dx = climber1.position.x - sprite.position.x;
+    const dy = climber1.position.y - sprite.position.y;
+    if (Math.sqrt(dx * dx + dy * dy) < 1.2) {
+      if (!state.tools.includes(name)) {
+        state.tools.push(name);
+        updateGearHUD();
+        flashScreen(); // light up screen on pickup
+      }
+      scene.remove(sprite);
+      return false; // remove from gearItems array
+    }
+    return true; // keep in gearItems array
+  });
+
+  // Animate gear sway and scale
+  gearItems.forEach(({ sprite }) => {
+    const t = Date.now() * 0.003;
+    sprite.position.x += Math.sin(t) * 0.002;
+    sprite.scale.set(1.2 + Math.sin(t * 2) * 0.05, 1.2 + Math.cos(t * 2) * 0.05, 1);
+  });
+
+  // Update Camp Muir text visibility
+  if (state.level >= 4 && !gamePaused) { // Camp Muir level
+    document.getElementById("campText").style.display = "block";
+    setTimeout(() => {
+      fadeOutAndPause("Camp Muir reached. Time to rest and get ready for the summit!");
+    }, 3000); // Show for 3 seconds
   }
 
-  // Parallax background moves slower than camera
-  // bgMesh.material.map.offset.x = camera.position.x * 0.001;
-  // bgMesh.material.map.offset.y = camera.position.y * 0.0015; // scroll speed 
-
+  // Draw the scene
   renderer.render(scene, camera);
 }
 
@@ -385,6 +273,16 @@ function triggerLevel(index) {
   state.water = Math.max(0, state.water - level.waterUse);
   state.snacks = Math.max(0, state.snacks - level.snackUse);
 
+  // Gear handling
+  if (level.gear) {
+  level.gear.forEach(item => {
+    if (!state.tools.includes(item)) {
+      state.tools.push(item);
+    }
+  });
+  updateGearHUD();
+}
+
   document.getElementById("currentLocation").textContent = level.name;
   document.getElementById("nextLocation").textContent = levels[index + 1]?.name || "None";
   document.getElementById("waterCount").textContent = state.water.toFixed(1);
@@ -438,6 +336,88 @@ function handleRopePhysics() {
       climber2.position.y = my - Math.sin(angle) * maxRopeLength / 2;
     }
   }
+}
+
+function updateGearHUD() {
+  const iconMap = {
+    headlamp: "💡",
+    helmet: "🪖",
+    axe: "⛏",
+    beacon: "🛰️",
+    crampons: "🥾",
+    parka: "🧥",
+    harness: "🪢"
+  };
+
+  const list = document.getElementById("toolsList");
+  list.innerHTML = "";
+
+  state.tools.forEach(tool => {
+    const icon = iconMap[tool] || "❓";
+    const span = document.createElement("span");
+    span.textContent = icon;
+    span.title = tool; // Tooltip on hover
+    span.style.margin = "0 4px";
+    list.appendChild(span);
+  });
+}
+
+// Function to place collectible gear
+export function createGear(x, y, name) {
+  const texture = new THREE.TextureLoader().load(`assets/icons/${name}.png`);
+  const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+  const gearSprite = new THREE.Sprite(material);
+  gearSprite.position.set(x, y + 1.2, 0);
+  gearSprite.scale.set(1.2, 1.2, 1);
+  gearSprite.name = name; // Store gear name for later
+
+  scene.add(gearSprite);
+  gearItems.push({ sprite: gearSprite, name});
+}
+
+// Flash screen on gear pickup
+function flashScreen() {
+  const flash = document.createElement("div");
+  flash.style.position = "absolute";
+  flash.style.top = "0";
+  flash.style.left = "0";
+  flash.style.width = "100%";
+  flash.style.height = "100%";
+  flash.style.backgroundColor = "white";
+  flash.style.opacity = "0.7";
+  flash.style.zIndex = "999";
+  flash.style.transition = "opacity 0.4s ease-out";
+  document.body.appendChild(flash);
+
+  setTimeout(() => {
+    flash.style.opacity = "0";
+    setTimeout(() => {
+      document.body.removeChild(flash);
+    }, 400); // Match transition duration
+  }, 150);
+}
+
+// Fade out and pause game
+function fadeOutAndPause(message) {
+  const overlay = document.createElement("div");
+  overlay.style.position = "absolute";
+  overlay.style.top = "0";
+  overlay.style.left = "0";
+  overlay.style.width = "100%";
+  overlay.style.height = "100%";
+  overlay.style.backgroundColor = "black";
+  overlay.style.opacity = "0";
+  overlay.style.zIndex = "999";
+  overlay.style.transition = "opacity 1.5s ease-in-out";
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.style.opacity = "0.9", 100); // Start fade in
+
+  setTimeout(() => {
+    document.getElementById("overlay").classList.remove("hidden");
+    document.getElementById("levelTitle").textContent = "Camp Muir";
+    document.getElementById("levelText").textContent = message;
+    gamePaused = true;
+  }, 2000); // Wait for fade in to complete
 }
 
 // Resize
