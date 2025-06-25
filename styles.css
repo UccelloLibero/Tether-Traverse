@@ -264,3 +264,12 @@ body {
       cursor: pointer;
       margin-top: 2rem;
     }
+
+    #toolsList img {
+      border-radius: 4px;
+      transition: transform 0.2s ease;
+    }
+
+    #toolsList img:hover {
+      transform: scale(1.1);
+    }

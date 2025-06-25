@@ -218,6 +218,16 @@ function animate() {
     }, 3000); // Show for 3 seconds
   }
 
+  // Climber1 is rendered above climber2
+  climber1.renderOrder = 2;
+  climber2.renderOrder = 1;
+
+  // Update scene render order
+  scene.remove(climber1);
+  scene.remove(climber2);
+  scene.add(climber2); // Drawn first
+  scene.add(climber1); // Drawn last
+
   // Draw the scene
   renderer.render(scene, camera);
 }
@@ -317,48 +327,67 @@ function handleRopePhysics() {
   const dy = climber1.position.y - climber2.position.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
 
-  if (dist > maxRopeLength) {
-    const angle = Math.atan2(dy, dx);
+  // Climber 2 always follows Climber 1
+  if (state.c2.x > state.c1.x - 0.2) {
+    state.c2.x = state.c1.x - 0.2;
+    
+    // Bounce back slightly for realism
+    state.c2.x -= 0.02; 
+  }
 
+  if (dist > maxRopeLength) {
+    const t = Date.now() * 0.002;
+    const angle = Math.atan2(dy, dx);
+    const perpAngle = angle + Math.PI / 2;
+    const jiggleStrength = 0.5;
+    const frequency = 12;
+    const decay = 1.0;
+
+    // Determine which climber is being pulled (farthest from midpoint)
+    const dxMid = (climber1.position.x + climber2.position.x) / 2;
+    const dyMid = (climber1.position.y + climber2.position.y) / 2;
+
+    const dist1 = Math.hypot(climber1.position.x - dxMid, climber1.position.y - dyMid);
+    const dist2 = Math.hypot(climber2.position.x - dxMid, climber2.position.y - dyMid);
+
+    if (dist2 > dist1) {
+      // Climber 2 is being pulled → apply jiggle
+      const jiggleX = Math.cos(perpAngle) * Math.sin(t * frequency) * jiggleStrength * decay;
+      const jiggleY = Math.sin(perpAngle) * Math.cos(t * frequency * 0.8) * jiggleStrength * decay;
+      climber2.position.x += jiggleX;
+      climber2.position.y += jiggleY;
+    }
+
+    // Rope correction:
     if (isMobile) {
-      // Only pull c2
       state.c2.x += Math.cos(angle) * pullStrength;
       climber2.position.y += Math.sin(angle) * pullStrength;
-      climber2.position.x += Math.sin(Date.now() * 0.01) * 0.02;
-      climber2.position.y += Math.cos(Date.now() * 0.015) * 0.02;
     } else {
-      // Pull both inward
-      const mx = (climber1.position.x + climber2.position.x) / 2;
-      const my = (climber1.position.y + climber2.position.y) / 2;
-      state.c1.x = mx + Math.cos(angle) * maxRopeLength / 2;
-      state.c2.x = mx - Math.cos(angle) * maxRopeLength / 2;
-      climber1.position.y = my + Math.sin(angle) * maxRopeLength / 2;
-      climber2.position.y = my - Math.sin(angle) * maxRopeLength / 2;
+      // Pull both climbers inward toward midpoint
+      state.c1.x = dxMid + Math.cos(angle) * maxRopeLength / 2;
+      state.c2.x = dxMid - Math.cos(angle) * maxRopeLength / 2;
+
+      climber1.position.y = dyMid + Math.sin(angle) * maxRopeLength / 2;
+      climber2.position.y = dyMid - Math.sin(angle) * maxRopeLength / 2;
     }
   }
 }
 
 function updateGearHUD() {
-  const iconMap = {
-    headlamp: "💡",
-    helmet: "🪖",
-    axe: "⛏",
-    beacon: "🛰️",
-    crampons: "🥾",
-    parka: "🧥",
-    harness: "🪢"
-  };
-
   const list = document.getElementById("toolsList");
   list.innerHTML = "";
 
   state.tools.forEach(tool => {
-    const icon = iconMap[tool] || "❓";
-    const span = document.createElement("span");
-    span.textContent = icon;
-    span.title = tool; // Tooltip on hover
-    span.style.margin = "0 4px";
-    list.appendChild(span);
+    const img = document.createElement("img");
+    img.src = `assets/icons/${tool}.png`;
+    img.alt = tool;
+    img.title = tool; // Tooltip on hover
+    img.style.width = "18px";
+    img.style.height = "18px";
+    img.style.margin = "0 6px";
+    img.style.verticalAlign = "middle";
+    img.style.cursor = "pointer"; // Pointer cursor for interactivity
+    list.appendChild(img);
   });
 }
 
@@ -368,7 +397,7 @@ export function createGear(x, y, name) {
   const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
   const gearSprite = new THREE.Sprite(material);
   gearSprite.position.set(x, y + 1.2, 0);
-  gearSprite.scale.set(1.2, 1.2, 1);
+  gearSprite.scale.set(0.6, 0.6, 1);
   gearSprite.name = name; // Store gear name for later
 
   scene.add(gearSprite);

@@ -7,7 +7,7 @@ export function loadLevel1(createPlatform) {
     createPlatform(16, 0);
     createPlatform(22, 0.5); // First gear pick up (headlamp and helmet)
     createGear(22, 0.5, "headlamp");
-    createGear(23, 0.5, "helmet");
+    createGear(23.5, 0.5, "helmet");
     createPlatform(28, 1);
     createPlatform(34, 2); // Snack and water
     createPlatform(40, 2.5);
