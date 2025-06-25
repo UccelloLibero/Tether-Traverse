@@ -1,3 +1,5 @@
+import { createGear } from "../script.js";
+
 export function loadLevel2(createPlatform) {
     // Manually place 40 platforms for Level 2 (Camp Muir to Summit)
     createPlatform(220, 20);
@@ -12,13 +14,14 @@ export function loadLevel2(createPlatform) {
     createPlatform(274, 29);
     createPlatform(280, 30);
     createPlatform(286, 31);
-    createPlatform(292, 32);
+    createPlatform(292, 32); // Cathedral Gap surprise Parka gear pick up
+    createGear(292, 32, "parka");
     createPlatform(298, 33);
-    createPlatform(304, 34);
+    createPlatform(304, 34); 
     createPlatform(310, 35);
     createPlatform(316, 36);
     createPlatform(322, 37);
-    createPlatform(328, 38);
+    createPlatform(328, 38); // Inghram Flats water and snack break
     createPlatform(334, 39);
     createPlatform(340, 40);
     createPlatform(346, 41);
@@ -26,19 +29,19 @@ export function loadLevel2(createPlatform) {
     createPlatform(358, 43);
     createPlatform(364, 44);
     createPlatform(370, 45);
-    createPlatform(376, 46);
+    createPlatform(376, 46); // Disappointment Cleaver water and snack break
     createPlatform(382, 47);
     createPlatform(388, 48);
     createPlatform(394, 49);
     createPlatform(400, 50);
     createPlatform(406, 51);
     createPlatform(412, 52);
-    createPlatform(418, 53);
+    createPlatform(418, 53); // High Point Break
     createPlatform(424, 54);
     createPlatform(430, 55);
     createPlatform(436, 56);
     createPlatform(442, 57);
     createPlatform(448, 58);
     createPlatform(454, 59);
-    createPlatform(460, 60);
+    createPlatform(460, 60); // Summit
 }

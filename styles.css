@@ -152,7 +152,8 @@ body {
     #dialog h2 {
       font-size: 2rem;
       margin-bottom: 1rem;
-      color: #FFD700;
+      color: #4cbb17;
+      font-family: "DynaPuff", cursive;
     }
     
     #dialog p {
@@ -316,4 +317,33 @@ body {
       font-size: 0.8rem;
       margin: 0.5rem 0;
       padding-top: 0.5rem;
+    }
+
+    #circleFadeOverlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 200vw;
+      height: 200vh;
+      background: radial-gradient(circle, black 0%, black 30%, transparent 60%);
+      transform: scale(5);
+      transform-origin: center;
+      opacity: 1;
+      z-index: 1002;
+      display: none;
+      pointer-events: none;
+      transition: transform 2.5s ease-in-out;
+    }
+
+    #nightOverlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: black;
+      opacity: 0;
+      transition: opacity 3s ease-in-out;
+      pointer-events: none;
+      z-index: 888; 
     }

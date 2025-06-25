@@ -13,7 +13,7 @@
   <div id="landingPage">
     <div class="landing-content">
       <h1>Tether Traverse</h1>
-      <p>Conquer Mount Rainier with your climbing partner!</p>
+      <p>Navigate Mount Rainier terrain with your climbing partner!</p>
       
       <h2>How to Play</h2>
       <div class="controls-section">
@@ -47,6 +47,8 @@
 
   <!-- Game Canvas -->
   <canvas id="gameCanvas"></canvas>
+  <div id="nightOverlay"></div>
+
 
   <!-- Mobile Controls -->
   <div id="mobileControls">
@@ -62,14 +64,17 @@
     <div id="dialog">
       <h2 id="levelTitle"></h2>
       <p id="levelText"></p>
-      <button id="continueBtn">Continue</button>
+      <!-- <button id="continueBtn">Continue</button> -->
     </div>
   </div>
 
+  <div id="circleFadeOverlay"></div>
+
+
   <!-- Camp Muir Screen -->
-  <div id="campMuirScreen">
+  <div id="campMuirScreen" style="display: none;">
     <div class="camp-content">
-      <h2>🏕️ Camp Muir</h2>
+      <h2>Camp Muir</h2>
       <p>You've reached Camp Muir at 10,080 feet!</p>
       <p>The team sets up camp for the night. You'll need to wake at 12 AM for the summit push.</p>
       <p>The final ascent will be in darkness, gradually revealing the sunrise as you climb.</p>
