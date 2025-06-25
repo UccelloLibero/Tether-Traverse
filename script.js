@@ -42,10 +42,10 @@ const state = {
 // Level data
 const levels = [
   { x: 0, name: "Paradise Trailhead", elevation: 5400, waterUse: 0, snackUse: 0 },
-  { x: 15, name: "Panorama Point", elevation: 6800, waterUse: 0.5, snackUse: 2, gear: ["headlamp", "helmet"], message: "Take a break! Tatoosh Range views." },
-  { x: 30, name: "Pebble Creek", elevation: 7200, waterUse: 0.5, snackUse: 2, gear: ["axe", "beacon"], message: "Rest stop before snowfields." },
-  { x: 50, name: "Muir Snowfield", elevation: 8500, waterUse: 0.5, snackUse: 2, gear: ["crampons", "parka", "harness"], message: "Snow trek begins!" },
-  { x: 70, name: "Camp Muir", elevation: 10080, waterUse: 0.5, snackUse: 2, message: "Camp Muir reached. Prepare for night!", isCamp: true },
+  { x: 34, name: "Panorama Point", elevation: 6800, waterUse: 0.5, snackUse: 2, gear: ["headlamp", "helmet"], message: "Take a break! Tatoosh Range views." },
+  { x: 82, name: "Pebble Creek", elevation: 7200, waterUse: 0.5, snackUse: 2, gear: ["axe", "beacon"], message: "Rest stop before snowfields." },
+  { x: 142, name: "Muir Snowfield", elevation: 8500, waterUse: 0.5, snackUse: 2, gear: ["crampons", "parka", "harness"], message: "Snow trek begins!" },
+  { x: 214, name: "Camp Muir", elevation: 10080, waterUse: 0.5, snackUse: 2, message: "Camp Muir reached. Prepare for night!", isCamp: true },
   { x: 90, name: "Cathedral Gap", elevation: 11000, waterUse: 0.25, snackUse: 1, night: true, message: "Cross Cathedral Gap." },
   { x: 110, name: "Ingraham Flats", elevation: 11500, waterUse: 0.25, snackUse: 1, night: true, message: "Over Ingraham Glacier!" },
   { x: 130, name: "Disappointment Cleaver", elevation: 12300, waterUse: 0.25, snackUse: 1, night: true, message: "The Cleaver awaits!" },
@@ -155,8 +155,29 @@ document.addEventListener("keyup", e => { keys[e.code] = false; });
   }
 });
 
+const pauseMenu = document.getElementById('pauseMenu');
+const resumeBtn = document.getElementById('resumeBtn');
+const restartBtn = document.getElementById('restartBtn');
+let isPaused = false;
+
+function togglePause() {
+  isPaused = !isPaused;
+  pauseMenu.style.display = isPaused ? 'flex' : 'none';
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") togglePause();
+});
+
+resumeBtn.addEventListener("click", () => togglePause());
+
+restartBtn.addEventListener("click", () => {
+  location.reload();
+});
+
 // Animate
 function animate() {
+  if (isPaused) return; // Skip frame if paused
   requestAnimationFrame(animate);
 
   if (!gameStarted || gamePaused) return;
@@ -302,6 +323,9 @@ function triggerLevel(index) {
     document.getElementById("levelTitle").textContent = level.name;
     document.getElementById("levelText").textContent = level.message;
     document.getElementById("overlay").classList.remove("hidden");
+    if (level.name === "Panorama Point") {
+      showFloatingMessage(`${level.name} · Elevation ${level.elevation} ft\n💧 Water -${level.waterUse}, 🍫 Snacks -${level.snackUse}`);
+    }
     gamePaused = true;
   }
 }
@@ -424,6 +448,20 @@ function flashScreen() {
       document.body.removeChild(flash);
     }, 400); // Match transition duration
   }, 150);
+}
+
+// Floating message 
+function showFloatingMessage(text) {
+  const msg = document.createElement("div");
+  msg.className = "floatingMessage";
+  msg.textContent = text;
+  document.body.appendChild(msg);
+
+  // Remove after a few seconds
+  setTimeout(() => {
+    msg.style.opacity = "0"; // Fade out
+    setTimeout(() => document.body.removeChild(msg), 1000); // Remove after fade out
+  }, 3000);
 }
 
 // Fade out and pause game

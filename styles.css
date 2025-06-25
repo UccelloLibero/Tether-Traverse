@@ -1,15 +1,16 @@
 body {
       margin: 0;
       overflow: hidden;
-      font-family: Arial, sans-serif;
+      font-family: "Fira Sans", sans-serif;
       background: #000;
+      color: #eee;
     }
     
     /* Landing Page Styles */
     #landingPage {
       position: fixed;
       inset: 0;
-      background: linear-gradient(to bottom, #87CEEB, #4682B4);
+      background: linear-gradient(160deg, #050505 0%, #320e3b 50%, #0e3b2f 100%);
       color: white;
       display: flex;
       align-items: center;
@@ -28,14 +29,17 @@ body {
     
     .landing-content h1 {
       font-size: 3rem;
+      font-family: "DynaPuff", cursive;;
       margin-bottom: 1rem;
-      color: #FFD700;
+      color: #4cbb17;
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
     }
     
     .landing-content h2 {
       font-size: 1.5rem;
-      color: #87CEEB;
+      font-family: "DynaPuff", cursive;
+      font-weight: lighter;
+      color: #8686ac;
       margin: 2rem 0 1rem;
     }
     
@@ -55,8 +59,9 @@ body {
     }
     
     .control-box h3 {
-      color: #FFD700;
+      color: #4cbb17;
       margin-top: 0;
+      font-family: "DynaPuff", cursive;
     }
     
     .control-box p {
@@ -67,18 +72,20 @@ body {
     #startBtn {
       font-size: 1.5rem;
       padding: 1rem 2rem;
-      background: #FFD700;
+      background: #4cbb17;
       color: #000;
       border: none;
       border-radius: 10px;
       cursor: pointer;
       margin-top: 2rem;
       transition: transform 0.2s;
+      font-family: "DynaPuff", cursive;
     }
     
     #startBtn:hover {
       transform: scale(1.1);
-      background: #FFA500;
+      background: #692475;
+      color: #eee;
     }
     
     /* Game Styles */
@@ -210,7 +217,7 @@ body {
     }
     
     .pause-content h2 {
-      color: #FFD700;
+      color: #4cbb17;
       margin-bottom: 1rem;
     }
     
@@ -222,6 +229,22 @@ body {
       cursor: pointer;
       background: #4682B4;
       color: white;
+    }
+
+    #resumeBtn {
+      background: #5A9FD4;
+    }
+
+    #resumeBtn:hover {
+      background:#6a89a7;
+    }
+
+    #restartBtn {
+      background: #ED2100;
+    }
+
+    #restartBtn:hover {
+      background: #960016;
     }
     
     /* Camp Muir Blackout */
@@ -272,4 +295,25 @@ body {
 
     #toolsList img:hover {
       transform: scale(1.1);
+    }
+
+    .floatingMessage {
+      position: absolute;
+      bottom: 20%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.95);
+      color: #333;
+      padding: 12px 20px;
+      font-size: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: opacity 1s ease-out;
+      z-index: 999;
+    }
+
+    #credit p {
+      font-size: 0.8rem;
+      margin: 0.5rem 0;
+      padding-top: 0.5rem;
     }

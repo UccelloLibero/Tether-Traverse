@@ -5,18 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tether Traverse</title>
   <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DynaPuff:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
 </head>
 <body>
   <!-- Landing Page -->
   <div id="landingPage">
     <div class="landing-content">
-      <h1>🏔️ Tether Traverse</h1>
+      <h1>Tether Traverse</h1>
       <p>Conquer Mount Rainier with your climbing partner!</p>
       
       <h2>How to Play</h2>
       <div class="controls-section">
         <div class="control-box">
-          <h3>📱 Mobile</h3>
+          <h3>Mobile</h3>
           <p><strong>Movement:</strong> Hold left/right buttons</p>
           <p><strong>Jump:</strong> Tap jump button</p>
           <p><strong>Pause:</strong> Double tap screen</p>
@@ -24,7 +26,7 @@
         </div>
         
         <div class="control-box">
-          <h3>💻 Desktop</h3>
+          <h3>Desktop</h3>
           <p><strong>Player 1:</strong> Arrow Keys (←→), Space to jump</p>
           <p><strong>Player 2:</strong> A/D keys, W to jump</p>
           <p><strong>Pause:</strong> Escape key</p>
@@ -36,6 +38,10 @@
       <p><strong>Starting supplies:</strong> 2 liters of water, 10 snacks</p>
       
       <button id="startBtn">Start Climbing!</button>
+      <!-- Built with love by Maya -->
+      <div id="credit">
+        <p>Built with ♥️ by Maya</p>
+      </div>
     </div>
   </div>
 
@@ -65,7 +71,7 @@
     <div class="camp-content">
       <h2>🏕️ Camp Muir</h2>
       <p>You've reached Camp Muir at 10,080 feet!</p>
-      <p>The team sets up camp for the night. You'll need to wake at 2 AM for the summit push.</p>
+      <p>The team sets up camp for the night. You'll need to wake at 12 AM for the summit push.</p>
       <p>The final ascent will be in darkness, gradually revealing the sunrise as you climb.</p>
       <p><strong>Remaining supplies:</strong> <span id="campSupplies"></span></p>
       <button id="startNightClimbBtn">Start Night Climb</button>
@@ -88,12 +94,12 @@
     <div><strong>Next:</strong> <span id="nextLocation">Panorama Point</span></div>
     <div><strong>Supplies:</strong>
       <ul>
-        <li>💧 Water: <span id="waterCount">2.0</span>L</li>
-        <li>🍫 Snacks: <span id="snacksCount">10</span></li>
+        <li>💧 <span id="waterCount">2.0</span>L</li>
+        <li>⚡️ <span id="snacksCount">10</span></li>
       </ul>
     </div>
     <div id="gearDisplay" class="hud-box">
-      <span>Gear:</span>
+      <span><strong>Gear:</strong></span>
       <span id="toolsList"></span>
     </div>
   </div>
