@@ -11,6 +11,8 @@ let keys = {};
 let mobileKeys = { left: false, right: false, jump: false };
 let ropeMesh;
 let gearItems = [];
+let ropeDistanceSamples = [];
+let ropeDistanceLabel = null;
 
 // Game Flags
 let gameStarted = false;
@@ -18,6 +20,7 @@ let gamePaused = false;
 let isNightClimb = false;
 let nightProgress = 0;
 let campMuirReached = false;
+let climber1Light, climber2Light;
 
 // Detect mobile
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -64,6 +67,16 @@ function initGame() {
   // scene.background = new THREE.Color(0x87CEEB);
 
   initPlayers(scene, loader);
+
+  // Add lights
+  climber1Light = new THREE.PointLight(0x88ffcc, 1.5, 5); // greenish halo
+  climber2Light = new THREE.PointLight(0xaa88ff, 1.5, 5); // purplish halo
+
+  climber1Light.position.set(climber1.position.x, climber1.position.y + 0.5, 1);
+  climber2Light.position.set(climber2.position.x, climber2.position.y + 0.5, 1);
+
+  scene.add(climber1Light);
+  scene.add(climber2Light);
 
   camera = new THREE.OrthographicCamera(
     window.innerWidth / -100, window.innerWidth / 100,
@@ -163,6 +176,7 @@ let isPaused = false;
 
 function togglePause() {
   isPaused = !isPaused;
+  gamePaused = isPaused; // Update gamePaused state
   pauseMenu.style.display = isPaused ? 'flex' : 'none';
 }
 
@@ -178,7 +192,6 @@ restartBtn.addEventListener("click", () => {
 
 // Animate
 function animate() {
-  if (isPaused) return; // Skip frame if paused
   requestAnimationFrame(animate);
 
   if (!gameStarted || gamePaused) return;
@@ -277,6 +290,32 @@ function animate() {
   scene.add(climber2); // Drawn first
   scene.add(climber1); // Drawn last
 
+  // Update lights position
+  climber1Light.position.set(climber1.position.x, climber1.position.y + 0.5, 1);
+  climber2Light.position.set(climber2.position.x, climber2.position.y + 0.5, 1);
+
+  if (isNightClimb) {
+    const fadeStart = 214; // Camp Muir
+    const fadeEnd = 376;   // Disappointment Cleaver
+    const x = climber1.position.x;
+
+    if (x >= fadeStart && x <= fadeEnd) {
+      // Fade in light intensity as we pass Camp Muir
+      const progress = (x - fadeStart) / (fadeEnd - fadeStart);
+      const intensity = 3 * (1 - progress); // Starts bright, fades out
+      climber1Light.intensity = intensity;
+      climber2Light.intensity = intensity;
+    } else {
+      // Before Camp Muir or after Cleaver: lights off
+      climber1Light.intensity = 0;
+      climber2Light.intensity = 0;
+    }
+  } else {
+    // During daytime: no lights
+    climber1Light.intensity = 0;
+    climber2Light.intensity = 0;
+  }
+
   // Draw the scene
   renderer.render(scene, camera);
 }
@@ -344,12 +383,25 @@ function triggerLevel(breakpoint) {
 
   if (breakpoint.name === "Disappointment Cleaver") {
     document.getElementById("nightOverlay").style.opacity = "0.3"; // Let in the light
-    showFloatingMessage("💡 Daylight emerging over the cleaver!");
+    showFloatingMessage("Daylight emerging over the cleaver!");
     }
 
   if (breakpoint.name === "Columbia Crest") {
     document.getElementById("nightOverlay").style.opacity = "0"; // Full daylight
-    showFloatingMessage("🌄 Sunrise at the Summit!");
+    showFloatingMessage("Sunrise at the Summit!");
+
+    const withinRange = ropeDistanceSamples.filter(d => d <= maxRopeLength).length;
+    const percentSafe = ((withinRange / ropeDistanceSamples.length) * 100).toFixed(0);
+
+    document.getElementById("overlay").classList.remove("hidden");
+    document.getElementById("levelTitle").textContent = "🏔️ Columbia Crest Summit";
+    document.getElementById("levelText").textContent =
+      `Congratulations, you reached the summit of Mount Rainier!
+
+  🧵 Rope management success: ${percentSafe}% of the time you kept a safe distance.`;
+
+    gamePaused = true;
+
   }
 
   // Update HUD
@@ -373,8 +425,27 @@ function triggerLevel(breakpoint) {
     setTimeout(() => {
       document.getElementById("overlay").classList.add("hidden");
       gamePaused = false;
+
+      if (breakpoint.name === "Camp Muir") {
+      const loader = new THREE.TextureLoader();
+
+      loader.load("assets/intheclouds.jpg", texture => {
+        scene.background = texture;
+      });
+
+      climber1.material.map = loader.load("assets/climber1-level2.png");
+      climber2.material.map = loader.load("assets/climber2-level2.png");
+
+      state.water = 2.0;
+      state.snacks = 10;
+      updateGearHUD();
+
+      isNightClimb = true;
+      document.getElementById("nightOverlay").style.opacity = "0.75";
+    }
     }, 4500); // 4.5 seconds delay
   }
+
 }
 
 // Rope drawing
@@ -390,6 +461,10 @@ function updateRope() {
   const newCurve = new THREE.CatmullRomCurve3(ropePoints);
   ropeMesh.geometry.dispose();
   ropeMesh.geometry = new THREE.TubeGeometry(newCurve, 20, 0.01, 8, false);
+
+
+  showRopeDistance();
+
 }
 
 // Rope physics
@@ -442,6 +517,45 @@ function handleRopePhysics() {
       climber2.position.y = dyMid - Math.sin(angle) * maxRopeLength / 2;
     }
   }
+
+  // Every 10 frames or so (reduce sampling frequency)
+  if (Math.random() < 0.1) {
+    const dx = climber1.position.x - climber2.position.x;
+    const dy = climber1.position.y - climber2.position.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    ropeDistanceSamples.push(dist);
+  }
+}
+
+function showRopeDistance(x, y) {
+  if (!ropeDistanceLabel) {
+    ropeDistanceLabel = document.createElement("div");
+    ropeDistanceLabel.style.position = "absolute";
+    ropeDistanceLabel.style.color = "#fff";
+    ropeDistanceLabel.style.fontSize = "0.75em";
+    ropeDistanceLabel.style.textShadow = "0 0 4px black";
+    ropeDistanceLabel.style.pointerEvents = "none";
+    ropeDistanceLabel.style.zIndex = "10";
+    document.body.appendChild(ropeDistanceLabel);
+  }
+
+  const dx = climber1.position.x - climber2.position.x;
+  const dy = climber1.position.y - climber2.position.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+
+  const midpoint = new THREE.Vector3(
+    (climber1.position.x + climber2.position.x) / 2,
+    (climber1.position.y + climber2.position.y) / 2 + 0.6,
+    0
+  );
+
+  const vector = midpoint.clone().project(camera);
+  const screenX = (vector.x + 1) / 2 * window.innerWidth;
+  const screenY = (-vector.y + 1) / 2 * window.innerHeight;
+
+  ropeDistanceLabel.style.left = `${screenX}px`;
+  ropeDistanceLabel.style.top = `${screenY}px`;
+  ropeDistanceLabel.textContent = `${dist.toFixed(2)}m`;
 }
 
 function updateGearHUD() {
@@ -539,11 +653,11 @@ function updateCampMuirStats() {
 
   // Replace climber textures to reflect new gear (e.g., heavier coats, helmets)
   const loader = new THREE.TextureLoader();
-  climber1.material.map = loader.load("assets/climbers/climber1_level2.png");
-  climber2.material.map = loader.load("assets/climbers/climber2_level2.png");
+  climber1.material.map = loader.load("assets/climbers/climber1-level2.png");
+  climber2.material.map = loader.load("assets/climbers/climber2-level2.png");
 
   // Update background to night version
-  loader.load('assets/NightClimb.jpg', texture => {
+  loader.load('assets/intheclouds.jpg', texture => {
     scene.background = texture;
   });
 
@@ -559,43 +673,6 @@ function startLevel2() {
   clearPlatforms(); // Remove level 1 platforms
   loadLevel2();
 }
-
-// Attach Camp Muir "Start Night Climb" button logic
-document.addEventListener("DOMContentLoaded", () => {
-  const startBtn = document.getElementById("startNightClimbBtn");
-  if (startBtn) {
-    startBtn.addEventListener("click", () => {
-      const circle = document.getElementById("circleFadeOverlay");
-      circle.style.transform = "scale(0)";
-      circle.style.display = "block";
-
-      setTimeout(() => {
-        circle.style.transform = "scale(5)";
-      }, 50);
-
-      setTimeout(() => {
-        document.getElementById("campMuirScreen").style.display = "none";
-        circle.style.display = "none";
-
-        // Background change
-        document.body.style.backgroundImage = "url('assets/background-night.jpg')";
-
-        // Update climber sprites
-        climber1.material.map = new THREE.TextureLoader().load("assets/climber1-summit.png");
-        climber2.material.map = new THREE.TextureLoader().load("assets/climber2-summit.png");
-
-        // Reset HUD supplies
-        state.water = 2.0;
-        state.snacks = 10;
-        updateHUD();
-
-        // Continue level 2
-        gamePaused = false;
-        startLevel2();
-      }, 2500);
-    });
-  }
-});
 
 // Resize
 window.addEventListener("resize", () => {
