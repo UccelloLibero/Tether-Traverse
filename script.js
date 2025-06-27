@@ -1,7 +1,9 @@
+
 import { handlePlayerMovement, addGroundedMotion, initPlayers } from './players.js';
 import { climber1, climber2} from './players.js';
 import { loadLevel1 } from './levels/level1.js';
 import { loadLevel2 } from './levels/level2.js';
+import { isNightMode } from "./players.js"; 
 
 // Game Setup
 let scene, camera, renderer;
@@ -29,7 +31,7 @@ const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/
 const gravity = -0.015;
 const jumpPower = 0.35;
 const moveSpeed = 0.1;
-const maxRopeLength = 4;
+const maxRopeLength = 3;
 const pullStrength = 0.08;
 
 // Game state
@@ -54,8 +56,20 @@ const breakpoints = [
   { x: 304, name: "Ingraham Flats", elevation: 11500, waterUse: 0.25, snackUse: 1, night: true, message: "Over Ingraham Glacier!" },
   { x: 376, name: "Disappointment Cleaver", elevation: 12300, waterUse: 0.25, snackUse: 1, night: true, message: "The Cleaver awaits!" },
   { x: 418, name: "High Break", elevation: 13500, waterUse: 0.25, snackUse: 1, night: true, message: "Final break. Dawn ahead!" },
-  { x: 660, name: "Columbia Crest", elevation: 14410, waterUse: 0, snackUse: 0, night: true, message: "SUMMIT! You made it!" }
+  { x: 460, name: "Columbia Crest", elevation: 14410, waterUse: 0, snackUse: 0, night: true, message: "SUMMIT! You made it!" }
 ];
+
+document.getElementById("startNightClimbBtn").addEventListener("click", () => {
+  const screen = document.getElementById("campMuirScreen");
+  screen.style.opacity = "1";
+  screen.style.transition = "opacity 0.5s ease-out";
+  screen.style.opacity = "0";
+
+  setTimeout(() => {
+    screen.style.display = "none";
+    gamePaused = false;
+  }, 500); // Match transition duration
+});
 
 // Init
 function initGame() {
@@ -112,8 +126,8 @@ function initGame() {
   loadLevel1(createPlatform);
   const campTexture = new THREE.TextureLoader().load('assets/camp-muir.png');
   const camp = new THREE.Sprite(new THREE.SpriteMaterial({ map: campTexture, transparent: true }));
-  camp.scale.set(6, 3, 1);
-  camp.position.set(214, 25.5, 0);
+  camp.scale.set(3, 3, 1);
+  camp.position.set(214, 25);
   scene.add(camp);
 
   // Camp Muir text 
@@ -224,6 +238,8 @@ function animate() {
   // Rope physics and rendering
   handleRopePhysics();
   updateRope();
+
+  // Update camera to follow climbers
   updateCamera();
 
   // Grounded motion
@@ -250,19 +266,8 @@ function animate() {
   gearItems.forEach(({ sprite }) => {
     const t = Date.now() * 0.003;
     sprite.position.x += Math.sin(t) * 0.002;
-    sprite.scale.set(1.2 + Math.sin(t * 2) * 0.05, 1.2 + Math.cos(t * 2) * 0.05, 1);
+    sprite.scale.set(0.8 + Math.sin(t * 2) * 0.05, 1.2 + Math.cos(t * 2) * 0.05, 1);
   });
-
-  // Update Camp Muir text visibility
-  if (!campMuirReached && state.level >= 4 && !gamePaused) {
-    campMuirReached = true;
-
-    document.getElementById("campText").style.display = "block";
-
-    setTimeout(() => {
-      fadeOutAndPause("Camp Muir reached. Time to rest and get ready for the summit!");
-    }, 3000);
-  }
 
   if (isNightClimb) {
     const fadeStart = 214; // Camp Muir
@@ -271,7 +276,7 @@ function animate() {
 
     if (currentX >= fadeStart && currentX <= fadeEnd) {
       const progress = (currentX - fadeStart) / (fadeEnd - fadeStart);
-      const newOpacity = 0.85 * (1 - progress);
+      const newOpacity = 0.5 * (1 - progress);
       document.getElementById("nightOverlay").style.opacity = newOpacity.toFixed(2);
     }
 
@@ -290,31 +295,12 @@ function animate() {
   scene.add(climber2); // Drawn first
   scene.add(climber1); // Drawn last
 
+  // Light behavior during night climb
+  updateNightClimbLighting();
+
   // Update lights position
   climber1Light.position.set(climber1.position.x, climber1.position.y + 0.5, 1);
   climber2Light.position.set(climber2.position.x, climber2.position.y + 0.5, 1);
-
-  if (isNightClimb) {
-    const fadeStart = 214; // Camp Muir
-    const fadeEnd = 376;   // Disappointment Cleaver
-    const x = climber1.position.x;
-
-    if (x >= fadeStart && x <= fadeEnd) {
-      // Fade in light intensity as we pass Camp Muir
-      const progress = (x - fadeStart) / (fadeEnd - fadeStart);
-      const intensity = 3 * (1 - progress); // Starts bright, fades out
-      climber1Light.intensity = intensity;
-      climber2Light.intensity = intensity;
-    } else {
-      // Before Camp Muir or after Cleaver: lights off
-      climber1Light.intensity = 0;
-      climber2Light.intensity = 0;
-    }
-  } else {
-    // During daytime: no lights
-    climber1Light.intensity = 0;
-    climber2Light.intensity = 0;
-  }
 
   // Draw the scene
   renderer.render(scene, camera);
@@ -379,6 +365,18 @@ function triggerLevel(breakpoint) {
   if (breakpoint.name === "Camp Muir") {
     isNightClimb = true; // START the night climb here
     document.getElementById("nightOverlay").style.opacity = "0.85";
+
+    document.getElementById("levelTitle").textContent = "Camp Muir";
+    document.getElementById("levelText").textContent = "Camp Muir reached! Time to rest and get ready for the summit!\n💧-0.5 ⚡️-2";
+
+    document.getElementById("overlay").classList.remove("hidden");
+    gamePaused = true;
+
+    // Begin fade after showing message
+    setTimeout(() => {
+      document.getElementById("overlay").classList.add("hidden");
+      fadeOutAndPause("Camp Muir reached! Time to rest and get ready for the summit!")
+    }, 4000);
   }
 
   if (breakpoint.name === "Disappointment Cleaver") {
@@ -388,17 +386,15 @@ function triggerLevel(breakpoint) {
 
   if (breakpoint.name === "Columbia Crest") {
     document.getElementById("nightOverlay").style.opacity = "0"; // Full daylight
-    showFloatingMessage("Sunrise at the Summit!");
+    // showFloatingMessage("Sunrise at the Summit!");
 
     const withinRange = ropeDistanceSamples.filter(d => d <= maxRopeLength).length;
     const percentSafe = ((withinRange / ropeDistanceSamples.length) * 100).toFixed(0);
 
     document.getElementById("overlay").classList.remove("hidden");
-    document.getElementById("levelTitle").textContent = "🏔️ Columbia Crest Summit";
+    document.getElementById("levelTitle").textContent = "Columbia Crest Summit";
     document.getElementById("levelText").textContent =
-      `Congratulations, you reached the summit of Mount Rainier!
-
-  🧵 Rope management success: ${percentSafe}% of the time you kept a safe distance.`;
+      `Congratulations, you reached the summit of Mount Rainier! Rope management success: ${percentSafe}% of the time you kept a safe distance.`;
 
     gamePaused = true;
 
@@ -425,24 +421,6 @@ function triggerLevel(breakpoint) {
     setTimeout(() => {
       document.getElementById("overlay").classList.add("hidden");
       gamePaused = false;
-
-      if (breakpoint.name === "Camp Muir") {
-      const loader = new THREE.TextureLoader();
-
-      loader.load("assets/intheclouds.jpg", texture => {
-        scene.background = texture;
-      });
-
-      climber1.material.map = loader.load("assets/climber1-level2.png");
-      climber2.material.map = loader.load("assets/climber2-level2.png");
-
-      state.water = 2.0;
-      state.snacks = 10;
-      updateGearHUD();
-
-      isNightClimb = true;
-      document.getElementById("nightOverlay").style.opacity = "0.75";
-    }
     }, 4500); // 4.5 seconds delay
   }
 
@@ -627,9 +605,24 @@ function showFloatingMessage(text) {
 
 // Fade out and pause game
 function fadeOutAndPause(message) {
-  const circle = document.getElementById("circleFadeOverlay");
-  circle.style.transform = "scale(0)";
-  circle.style.display = "block";
+  let circle = document.getElementById("circleFadeOverlay");
+  if (!circle) {
+    circle = document.createElement("div");
+    circle.id = "circleFadeOverlay";
+    circle.style.position = "fixed";
+    circle.style.top = "50%";
+    circle.style.left = "50%";
+    circle.style.width = "100px";
+    circle.style.height = "100px";
+    circle.style.backgroundColor = "black";
+    circle.style.borderRadius = "50%";
+    circle.style.transform = "translate(-50%, -50%) scale(0)";
+    circle.style.transformOrigin = "center";
+    circle.style.transition = "transform 2s ease-in-out";
+    circle.style.zIndex = "1000";
+    circle.style.display = "none";
+    document.body.appendChild(circle);
+  }
   
   setTimeout(() => {
     circle.style.transform = "scale(5)";
@@ -648,13 +641,24 @@ function updateCampMuirStats() {
   state.water = 2.0;
   state.snacks = 10;
 
+  // Clear collected gear
+  state.tools = [];
+
+  isNightMode = true; // Set night mode for level 2
+
   // Update supply count
   document.getElementById("campSupplies").textContent = `💧 ${state.water.toFixed(1)} | ⚡️ ${state.snacks}`;
 
   // Replace climber textures to reflect new gear (e.g., heavier coats, helmets)
   const loader = new THREE.TextureLoader();
-  climber1.material.map = loader.load("assets/climbers/climber1-level2.png");
-  climber2.material.map = loader.load("assets/climbers/climber2-level2.png");
+  const climber1Texture = loader.load("assets/climbers/climber1-level2.png");
+  const climber2Texture = loader.load("assets/climbers/climber2-level2.png");
+
+  climber1.material.map = climber1Texture;
+  climber1.material.needsUpdate = true;
+
+  climber2.material.map = climber2Texture;
+  climber2.material.needsUpdate = true; 
 
   // Update background to night version
   loader.load('assets/intheclouds.jpg', texture => {
@@ -672,6 +676,31 @@ function startLevel2() {
   currentLevel = 2;
   clearPlatforms(); // Remove level 1 platforms
   loadLevel2();
+}
+
+// Helper function for lighting during night climb
+function updateNightClimbLighting() {
+  if (isNightClimb) {
+    const fadeStart = 214; // Camp Muir
+    const fadeEnd = 376;   // Disappointment Cleaver
+    const x = climber1.position.x;
+
+    if (x >= fadeStart && x <= fadeEnd) {
+      // Fade in light intensity as we pass Camp Muir
+      const progress = (x - fadeStart) / (fadeEnd - fadeStart);
+      const intensity = 5 * (1 - progress); // Starts bright, fades out
+      climber1Light.intensity = intensity;
+      climber2Light.intensity = intensity;
+    } else {
+      // Before Camp Muir or after Cleaver: lights off
+      climber1Light.intensity = 0;
+      climber2Light.intensity = 0;
+    }
+  } else {
+    // During daytime: no lights
+    climber1Light.intensity = 0;
+    climber2Light.intensity = 0;
+  }
 }
 
 // Resize

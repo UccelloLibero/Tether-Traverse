@@ -1,4 +1,5 @@
 import { createGear } from "../script.js";
+// import { gamePaused, isFalling } from "../script.js";
 
 export function loadLevel1(createPlatform) {
     // Manually place 35 platforms for Level 1 (Paradise to Camp Muir)
@@ -46,3 +47,31 @@ export function loadLevel1(createPlatform) {
     createPlatform(214, 23); // Last platform at Camp Muir
     createPlatform(214, 23, 10, 0.5); // Longer platform for Camp Muir
 }
+
+// export function triggerFallRecovery(state, climber1, climber2, lastSafePosition) {
+//     gamePaused = true; // Pause the game during recovery
+//     isFalling = true;
+
+//     const overlay = document.getElementById("overlay");
+//     overlay.classList.remove("hidden");
+//     document.getElementById("levelTitle").textContent = "You all are falling!";
+//     document.getElementById("levelText").textContent = "You slipped off the edge! Resetting to the last safe place...";
+
+//     setTimeout(() => {
+//         // Reset climbers to last safe position
+//         state.c1.x = lastSafePosition.x1;
+//         state.c1.y = lastSafePosition.y1;
+//         state.c1.vy = 0;
+
+//         state.c2.x = lastSafePosition.x2;
+//         state.c2.y = lastSafePosition.y2;
+//         state.c2.vy = 0;
+
+//         climber1.position.set(state.c1.x, state.c1.y, 0);
+//         climber2.position.set(state.c2.x, state.c2.y, 0);
+
+//         overlay.classList.add("hidden");
+//         gamePaused = false; // Resume the game
+//         isFalling = false; // Reset falling state
+//     }, 3000); // 3 seconds delay for recovery
+// }

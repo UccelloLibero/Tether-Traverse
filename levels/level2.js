@@ -1,4 +1,5 @@
 import { createGear } from "../script.js";
+// import { gamePaused, isFalling } from "../script.js";
 
 export function loadLevel2(createPlatform) {
     // Manually place 40 platforms for Level 2 (Camp Muir to Summit)
@@ -45,3 +46,18 @@ export function loadLevel2(createPlatform) {
     createPlatform(454, 59);
     createPlatform(460, 60); // Summit
 }
+
+// export function triggerGameOver() {
+//     gamePaused = true; // Pause the game during game over
+//     isFalling = true;
+
+//     const overlay = document.getElementById("overlay");
+//     overlay.classList.remove("hidden");
+//     document.getElementById("levelTitle").textContent = "You've fallen into a crevasse!";
+//     document.getElementById("levelText").textContent = "The climb ends here. Glacier climbs are unforgiving.\n\Better luck next time.";
+
+//     const btn = document.createElement("button");
+//     btn.textContent = "Restart";
+//     btn.onclick = () => location.reload();
+//     document.getElementById("dialog").appendChild(btn);
+// }

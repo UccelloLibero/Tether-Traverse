@@ -259,6 +259,9 @@ body {
       justify-content: center;
       z-index: 1001;
       text-align: center;
+      opacity: 1;
+      transition: opacity 0.5s ease-in-out;
+      background-color: rgba(0, 0, 0, 0.85);
     }
     
     .camp-content {
@@ -319,7 +322,7 @@ body {
       padding-top: 0.5rem;
     }
 
-    #circleFadeOverlay {
+    /* #circleFadeOverlay {
       position: absolute;
       top: 50%;
       left: 50%;
@@ -333,7 +336,7 @@ body {
       display: none;
       pointer-events: none;
       transition: transform 2.5s ease-in-out;
-    }
+    } */
 
     #nightOverlay {
       position: absolute;
