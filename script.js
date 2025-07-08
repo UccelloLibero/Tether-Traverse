@@ -74,7 +74,7 @@ document.getElementById("startNightClimbBtn").addEventListener("click", () => {
 // Init
 function initGame() {
   const loader = new THREE.TextureLoader()
-    loader.load('assets/MountRainier.jpg', texture => {
+    loader.load('assets/mount-rainier.png', texture => {
     scene.background = texture;
   });
   scene = new THREE.Scene();
@@ -661,7 +661,7 @@ function updateCampMuirStats() {
   climber2.material.needsUpdate = true; 
 
   // Update background to night version
-  loader.load('assets/intheclouds.jpg', texture => {
+  loader.load('assets/mount-rainier-level2.jpg', texture => {
     scene.background = texture;
   });
 

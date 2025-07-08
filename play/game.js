@@ -1,0 +1,244 @@
+import { createPlatform } from "../utils/platforms.js";
+import { checkCollision } from "../utils/collision.js";
+import { sharedState} from "../play/state.js";
+import { initHUD, updateGearHUD, flashScreen } from "../ui/hud.js";
+import { createGear, detectGearPickup, animateGearItems, gearItems } from "../utils/gear.js";
+import { initLevel1, updateLevel1, cleanupLevel1 } from "../levels/level1.js";
+import { initLevel2, updateLevel2, cleanupLevel2 } from "../levels/level2.js";
+import { createLevel2Lights, updateHeadLampLighting } from "../players/level2players.js";
+import { climber1 as climber1Level1, climber2 as climber2Level1 } from "../players/level1players.js";
+import { climber1 as climber1Level2, climber2 as climber2Level2 } from "../players/level2players.js";
+import { handleBreakpoints } from "../utils/breakpoints.js";
+import { updatePlayerLevel1 } from "../players/level1players.js";
+import { updatePlayerLevel2 } from "../players/level2players.js";
+import { initRope, updateRope, handleRopePhysics, getRopeDistanceSamples } from "../utils/rope.js";
+
+
+let animationId;
+
+// Detect mobile
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+const pullStrength = 0.05;
+const maxRopeLength = 2.5;
+
+// Game entry point
+export function startGame() {
+    initScene();
+    initHUD();
+    initLevel1(sharedState);
+    initRope(sharedState.scene, climber1Level1, climber2Level1); // Initialize rope for level 1
+    animate();
+}
+
+function initScene() {
+    sharedState.scene = new THREE.Scene();
+    sharedState.platforms = []; // Initialize platforms array
+
+    // Add directional light
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    directionalLight.position.set(10, 10, 10);
+    sharedState.scene.add(directionalLight);
+
+    // Ambient light to soften shadows
+    const ambientLight = new THREE.AmbientLight(0x404040, 1.2); 
+    sharedState.scene.add(ambientLight);
+
+    sharedState.camera = new THREE.OrthographicCamera(
+        window.innerWidth / -100, window.innerWidth / 100,
+        window.innerHeight / 100, window.innerHeight / -100,
+        0.1, 1000
+    );
+    sharedState.camera.position.z = 10;
+
+    sharedState.renderer = new THREE.WebGLRenderer({ 
+        canvas: document.getElementById("gameCanvas"),
+        antialias: true
+     });
+
+    sharedState.renderer.setSize(window.innerWidth, window.innerHeight);
+
+
+    window.addEventListener("resize", () => {
+        sharedState.camera.left = window.innerWidth / -100;
+        sharedState.camera.right = window.innerWidth / 100;
+        sharedState.camera.top = window.innerHeight / 100;
+        sharedState.camera.bottom = window.innerHeight / -100;
+        sharedState.camera.updateProjectionMatrix();
+        sharedState.renderer.setSize(window.innerWidth, window.innerHeight);
+    }); 
+}
+
+
+// Call after Camp Muir screen
+export function startLevel2() {
+    cleanupLevel1(sharedState); // remove Level 1 elements
+
+    fadeToLevel2Background("assets/mount-rainier-level2.jpg"); // Fade in new background
+
+    initLevel2(sharedState);
+    sharedState.currentLevel = 2;
+    sharedState.gamePaused = false;
+    sharedState.isNightClimb = true; // Set night climb state for level 2
+    createLevel2Lights(sharedState.scene, climber1Level2, climber2Level2); // Create lights for climbers
+
+    updateHeadLampLighting(climber1Level2, climber2Level2, sharedState.isNightClimb, climber1Level2.position.x);
+    initRope(sharedState.scene, climber1Level2, climber2Level2); // New rope for Level 2
+}
+
+
+// Main animation loop
+function animate() {
+    animationId = requestAnimationFrame(animate);
+    if (sharedState.gamePaused) return;
+
+    // Pick climbers per level
+    const climber1 = sharedState.currentLevel === 1 ? climber1Level1 : climber1Level2;
+    const climber2 = sharedState.currentLevel === 1 ? climber2Level1 : climber2Level2;
+
+    if (!climber1 || !climber1.position || !climber2 || !climber2.position) return;
+
+    if (sharedState.currentLevel === 1) {
+        updateLevel1(sharedState, climber1);
+        updatePlayerLevel1(sharedState);
+    } else if (sharedState.currentLevel === 2) {
+        updateLevel2(sharedState, climber1);
+        updatePlayerLevel2(sharedState);
+    }
+
+    handleBreakpoints(climber1, sharedState);
+
+    handleRopePhysics(sharedState, climber1, climber2, isMobile, pullStrength, maxRopeLength);
+    updateRope(climber1, climber2, sharedState.camera);
+
+    updateCamera(sharedState.camera, climber1, climber2);
+    detectGearPickup(climber1, sharedState, sharedState.scene, updateGearHUD, flashScreen);
+
+    updateGearHUD(sharedState.tools);
+
+    // Sunrise simulation for level 2
+    if (sharedState.currentLevel === 2 && sharedState.isNightClimb) {
+        const fadeStart = 214;
+        const fadeEnd = 376;
+        const currentX = sharedState.c1.x || 0; // Use climber 1's as main reference
+
+        if (currentX >= fadeStart && currentX <= fadeEnd) {
+            const progress = (currentX - fadeStart) / (fadeEnd - fadeStart);
+            const newOpacity = 0.5 * (1 - progress); // Fade from 0.5 to 0
+            document.getElementById("nightOverlay").style.opacity = newOpacity;
+        }
+
+        if (currentX > fadeEnd) {
+            document.getElementById("nightOverlay").style.opacity = 0; // Fully transparent after fade
+        }
+    }
+
+    sharedState.renderer.render(sharedState.scene, sharedState.camera);
+
+}
+
+function fadeToLevel2Backgorund(texturePath) {
+    const overlay = document.createElement("div");
+    overlay.style.position = "absolute";
+    overlay.style.top = 0;
+    overlay.style.left = 0;
+    overlay.style.width = "100%";
+    overlay.style.height = "100%";
+    overlay.style.backgroundColor = "black";
+    overlay.style.opacity = "1";
+    overlay.style.transition = "opacity 2s ease-out";
+    overlay.style.zIndex = "999"; // Ensure it is above other elements
+    document.body.appendChild(overlay);
+
+    setTimeout(() => {
+        const loader = new THREE.TextureLoader();
+        loader.load(texturePath, (texture) => {
+            sharedState.scene.background = texture;
+        });
+        overlay.style.opacity = "0"; // Fade out the overlay
+    }, 500); // Wait for 0.5 seconds before starting the fade
+
+}
+
+export function fadeOutAndPause(title, message) {
+    const overlay = document.getElementById("overlay");
+    overlay.classList.remove("hidden");
+    document.getElementById("levelTitle").textContent = title;
+    document.getElementById("levelText").textContent = message;
+
+    setTimeout(() => {
+        overlay.classList.add("hidden");
+    }, 4000);
+}
+
+// Stop the game and cancel animation
+export function stopGame() {
+    sharedState.gamePaused = true;
+    cancelAnimationFrame(animationId);
+    
+    // Cleanup scene
+    while (sharedState.scene.children.length > 0) {
+        sharedState.scene.remove(sharedState.scene.children[0]);
+    }
+    
+    // Reset state
+    sharedState.currentLevel = 1;
+    sharedState.gamePaused = false;
+    
+    // Reset camera position
+    sharedState.camera.position.set(0, 0, 10);
+    
+    // Reset HUD
+    initHUD(sharedState);
+}
+
+// Pause the game and show pause menu
+export function pauseGame() {
+    sharedState.gamePaused = true;
+    document.getElementById("pauseMenu").style.display = "flex";
+}
+
+// Resume the game from pause menu
+export function resumeGame() {
+    sharedState.gamePaused = false;
+    document.getElementById("pauseMenu").style.display = "none";
+    animate(); // Resume animation loop
+}
+
+// Restart the game from the beginning
+export function restartGame() {
+    window.location.reload(); // Full reset
+}
+
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+        if (sharedState.gamePaused) {
+            resumeGame();
+        } else {
+            pauseGame();
+        }
+    }
+});
+
+// Camera
+function updateCamera(camera, climber1, climber2) {
+    const centerX = (climber1.position.x + climber2.position.x) / 2;
+    const centerY = (climber1.position.y + climber2.position.y) / 2 + 2;
+    camera.position.x += (centerX - camera.position.x) * 0.05; // Smoothly follow climbers
+    camera.position.y += (centerY - camera.position.y) * 0.05; // Smoothly follow climbers
+}
+
+document.getElementById("startBtn").addEventListener("click", () => {
+  document.getElementById("landingPage").style.display = "none";
+  startGame();
+});
+
+document.getElementById("resumeBtn").addEventListener("click", resumeGame);
+
+// Tract keyboard input
+window.addEventListener("keydown", e => {
+    sharedState.keys[e.code] = true;
+});
+window.addEventListener("keyup", e => {
+    sharedState.keys[e.code] = false;
+});
