@@ -197,7 +197,8 @@ body {
     #hud li {
       margin: 0.3rem 0;
     }
-    
+  
+
     /* Pause Menu */
     #pauseMenu {
       position: fixed;
@@ -246,6 +247,53 @@ body {
 
     #restartBtn:hover {
       background: #960016;
+    }
+
+    /* Camp Muir */
+    #campMuirOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.95);
+      color: white;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      transition: opacity 1s;
+    }
+
+    .camp-muir-content {
+      max-width: 600px;
+      padding: 2rem;
+      background-color: rgba(0, 0, 0, 0.8);
+      border-radius: 12px;
+    }
+
+    .camp-muir-content h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #FFD700;
+      font-family: "DynaPuff", cursive;
+    }
+
+    .camp-muir-content p {
+      font-size: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    #startLevel2Btn {
+      font-size: 1rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #4cbb17;
+      color: white;
+      border: none;
+    }
+
+    #startLevel2Btn:hover {
+      background: #337a13;
     }
     
     /* Camp Muir Blackout */

@@ -30,6 +30,7 @@
           <p><strong>Player 1:</strong> Arrow Keys (← →), ↑ to jump</p>
           <p><strong>Player 2:</strong> A/D keys, W to jump</p>
           <p><strong>Pause:</strong> Escape key</p>
+          <p><strong>Sound On/Off:</strong> M key</p>
           <p><em>Control both climbers simultaneously!</em></p>
         </div>
       </div>
@@ -76,6 +77,19 @@
     </div>
   </div>
 
+  <!-- Camp Muir Overlay -->
+  <div id="campMuirOverlay" class="hidden">
+    <div class="camp-muir-content">
+      <h2>Camp Muir</h2>
+      <p>
+        Camp Muir is the gateway to the summit. From here, hanging glaciers and towering seracs loom above. 
+        For most, this is the end. For some, it's just the beginning.
+      </p>
+      <button id="startLevel2Btn">Continue to Summit</button>
+    </div>
+  </div>
+
+
   <!-- HUD -->
   <div id="hud" class="hidden">
     <div><strong>Elevation:</strong> <span id="currentElevation">5,400 ft</span></div>
@@ -94,6 +108,10 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- <script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.160.1/build/three.module.js';
+    window.THREE = THREE; // Make it globally available if needed
+  </script> -->
   <script type="module" src="./play/game.js"></script>
 </body>
 </html>

@@ -12,6 +12,7 @@ import { handleBreakpoints } from "../utils/breakpoints.js";
 import { updatePlayerLevel1 } from "../players/level1players.js";
 import { updatePlayerLevel2 } from "../players/level2players.js";
 import { initRope, updateRope, handleRopePhysics, getRopeDistanceSamples } from "../utils/rope.js";
+import { initMusic, toggleMusic } from "../utils/music.js";
 
 
 let animationId;
@@ -22,9 +23,13 @@ const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/
 const pullStrength = 0.05;
 const maxRopeLength = 2.5;
 
+sharedState.reachedCampMuir = false;
+
+
 // Game entry point
 export function startGame() {
     initScene();
+    initMusic(sharedState.camera); // Initialize background music
     initHUD();
     initLevel1(sharedState);
     initRope(sharedState.scene, climber1Level1, climber2Level1); // Initialize rope for level 1
@@ -84,6 +89,7 @@ export function startLevel2() {
 
     updateHeadLampLighting(climber1Level2, climber2Level2, sharedState.isNightClimb, climber1Level2.position.x);
     initRope(sharedState.scene, climber1Level2, climber2Level2); // New rope for Level 2
+    animate(); // resume the loop now
 }
 
 
@@ -104,6 +110,14 @@ function animate() {
     } else if (sharedState.currentLevel === 2) {
         updateLevel2(sharedState, climber1);
         updatePlayerLevel2(sharedState);
+    }
+
+    // Check for Camp Muir platform (x = 214) trigger
+    if (sharedState.currentLevel === 1 && climber1.position.x >= 214 && !sharedState.reachedCampMuir) {
+        sharedState.reachedCampMuir = true;
+        sharedState.gamePaused = true;
+        showCampMuirOverlay();
+        return; // halt animation loop until Level 2
     }
 
     handleBreakpoints(climber1, sharedState);
@@ -137,7 +151,7 @@ function animate() {
 
 }
 
-function fadeToLevel2Backgorund(texturePath) {
+function fadeToLevel2Background(texturePath) {
     const overlay = document.createElement("div");
     overlay.style.position = "absolute";
     overlay.style.top = 0;
@@ -169,6 +183,16 @@ export function fadeOutAndPause(title, message) {
     setTimeout(() => {
         overlay.classList.add("hidden");
     }, 4000);
+}
+
+function showCampMuirOverlay() {
+  const overlay = document.getElementById("campMuirOverlay");
+  overlay.classList.remove("hidden");
+
+  document.getElementById("startLevel2Btn").onclick = () => {
+    overlay.classList.add("hidden");
+    startLevel2(); // Calls your existing function
+  };
 }
 
 // Stop the game and cancel animation
@@ -241,4 +265,13 @@ window.addEventListener("keydown", e => {
 });
 window.addEventListener("keyup", e => {
     sharedState.keys[e.code] = false;
+});
+
+document.addEventListener("keydown", (event) => {
+    const key = event.code;
+
+    // Music toggle
+    if (key === "KeyM") {
+        toggleMusic();
+    }
 });

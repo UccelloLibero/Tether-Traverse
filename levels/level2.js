@@ -4,6 +4,7 @@ import { checkCollision } from "../utils/collision.js";
 import { climber1, climber2, initPlayersLevel2 } from "../players/level2players.js";
 import { updateGearHUD, flashScreen } from "../ui/hud.js";
 import { handleBreakpoints } from "../utils/breakpoints.js";
+import { createLevel2Lights } from "../players/level2players.js";
 
 let localPlatforms = [];
 
@@ -23,10 +24,15 @@ export function initLevel2(state) {
     state.climber1 = climber1;
     state.climber2 = climber2;
 
+    state.c1 = { x: 214, y: 21, vy: 0, grounded: false };
+    state.c2 = { x: 212, y: 21, vy: 0, grounded: false };   
+
     scene.add(state.rope);
 
     localPlatforms = [];
     state.platforms = localPlatforms;
+
+    createLevel2Lights(scene, climber1, climber2);
 
     createGround(scene, localPlatforms);
     loadLevel2(state.scene, localPlatforms);

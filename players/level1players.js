@@ -50,39 +50,42 @@ export function updatePlayerLevel1(state) {
         climber2.material.map = climber2Right;
     }
 
-    // Apply gravity if not grounded and vertical motion
-    if (!state.c1.grounded) {
+    // --- Apply gravity ---
     state.c1.vy += gravity;
-    }
-
-    if (!state.c2.grounded) {
     state.c2.vy += gravity;
-    }
 
-    // Platform collision 
-    const onPlatform1 = checkCollision(climber1, state.c1, state.platforms);
-    const onPlatform2 = checkCollision(climber2, state.c2, state.platforms);
-
-    state.c1.grounded = onPlatform1;
+    // --- Apply vertical motion ---
     state.c1.y += state.c1.vy;
-    
-    state.c2.grounded = onPlatform2;
     state.c2.y += state.c2.vy;
 
-    // Ground collision, only if not on platform
-    if (!onPlatform1 && state.c1.y <= groundY) {
+    // --- Platform collision detection ---
+    const platformY1 = checkCollision(climber1, state.c1, state.platforms);
+    if (platformY1 !== null) {
+        state.c1.y = platformY1 + 0.4; // snap to top of platform
+        state.c1.vy = 0;
+        state.c1.grounded = true;
+    } else if (state.c1.y <= groundY) {
         state.c1.y = groundY;
         state.c1.vy = 0;
         state.c1.grounded = true;
+    } else {
+        state.c1.grounded = false;
     }
 
-    if (!onPlatform2 && state.c2.y <= groundY) {
+    const platformY2 = checkCollision(climber2, state.c2, state.platforms);
+    if (platformY2 !== null) {
+        state.c2.y = platformY2 + 0.4;
+        state.c2.vy = 0;
+        state.c2.grounded = true;
+    } else if (state.c2.y <= groundY) {
         state.c2.y = groundY;
         state.c2.vy = 0;
         state.c2.grounded = true;
+    } else {
+        state.c2.grounded = false;
     }
 
-    // Jump logic after grounded logic
+    // --- Jumping ---
     if (keys["ArrowUp"] && state.c1.grounded) {
         state.c1.vy = jumpPower;
         state.c1.grounded = false;
@@ -93,7 +96,7 @@ export function updatePlayerLevel1(state) {
         state.c2.grounded = false;
     }
 
-    // Bouncy idle effect (for fun) 
+    // --- Idle bounce for fun ---
     const t = Date.now() * 0.003;
     if (state.c1.grounded) {
         climber1.position.x += Math.sin(t * 0.5) * 0.01;
@@ -104,7 +107,7 @@ export function updatePlayerLevel1(state) {
         climber2.position.y += Math.cos(t + Math.PI) * 0.005;
     }
 
-    // Update mesh positions 
+    // --- Update 3D mesh positions ---
     climber1.position.x = state.c1.x;
     climber1.position.y = state.c1.y;
 

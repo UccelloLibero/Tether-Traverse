@@ -46,7 +46,7 @@ export function flashScreen() {
   flash.style.left = "0";
   flash.style.width = "100%";
   flash.style.height = "100%";
-  flash.style.backgroundColor = "white";
+  flash.style.backgroundColor = "#f5f5f5";
   flash.style.opacity = "0.7";
   flash.style.zIndex = "999";
   flash.style.transition = "opacity 0.4s ease-out";
