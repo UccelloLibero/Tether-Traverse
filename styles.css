@@ -1,7 +1,7 @@
 body {
       margin: 0;
       overflow: hidden;
-      font-family: "Fira Sans", sans-serif;
+      font-family: "Fira Sans", sans-serif !important;
       background: #000;
       color: #eee;
     }
@@ -41,6 +41,13 @@ body {
       font-weight: lighter;
       color: #8686ac;
       margin: 2rem 0 1rem;
+    }
+
+    .control-box p {
+      font-size: 1rem;
+      font-family: "Fira Sans", sans-serif;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
     }
     
     .controls-section {
@@ -128,7 +135,7 @@ body {
     #overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.95);
+      background: linear-gradient(160deg, #050505 0%, #320e3b 50%, #0e3b2f 100%);
       color: white;
       z-index: 999;
       display: flex;
@@ -167,12 +174,13 @@ body {
       border-radius: 10px;
       cursor: pointer;
       background: #4682B4;
+      font-family: "DynaPuff", cursive;
       color: white;
       border: none;
     }
     
     #continueBtn:hover {
-      background: #5A9FD4;
+      background: #13476f;
     }
     
     /* HUD */
@@ -180,7 +188,7 @@ body {
       position: fixed;
       top: 10px;
       left: 10px;
-      background: rgba(0, 0, 0, 0.7);
+      background: linear-gradient(160deg, #050505 0%, #320e3b 50%, #0e3b2f 100%);
       color: white;
       padding: 1rem;
       font-size: 0.9rem;
@@ -196,6 +204,11 @@ body {
     
     #hud li {
       margin: 0.3rem 0;
+    }
+
+    #hud div strong{
+      font-family: "DynaPuff", cursive;
+      color: #4cbb17;
     }
   
 
@@ -273,7 +286,7 @@ body {
     .camp-muir-content h2 {
       font-size: 2rem;
       margin-bottom: 1rem;
-      color: #FFD700;
+      color: #4cbb17;
       font-family: "DynaPuff", cursive;
     }
 
@@ -288,8 +301,9 @@ body {
       border-radius: 10px;
       cursor: pointer;
       background: #4cbb17;
-      color: white;
+      color: #212121;
       border: none;
+      font-family: "DynaPuff", cursive;
     }
 
     #startLevel2Btn:hover {

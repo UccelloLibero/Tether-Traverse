@@ -116,6 +116,17 @@ export function updatePlayerLevel1(state) {
 }
 
 export function cleanupPlayersLevel1(scene) {
-    scene.remove(climber1);
-    scene.remove(climber2);
+    if (climber1 && climber1.parent) {
+        climber1.geometry.dispose();
+        climber1.material.dispose();
+        scene.remove(climber1);
+        climber1 = null;
+    }
+
+    if (climber2 && climber2.parent) {
+        climber2.geometry.dispose();
+        climber2.material.dispose();
+        scene.remove(climber2);
+        climber2 = null;
+    }
 }

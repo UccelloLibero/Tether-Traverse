@@ -6,13 +6,14 @@ import { createGear, detectGearPickup, animateGearItems, gearItems } from "../ut
 import { initLevel1, updateLevel1, cleanupLevel1 } from "../levels/level1.js";
 import { initLevel2, updateLevel2, cleanupLevel2 } from "../levels/level2.js";
 import { createLevel2Lights, updateHeadLampLighting } from "../players/level2players.js";
-import { climber1 as climber1Level1, climber2 as climber2Level1 } from "../players/level1players.js";
+import { cleanupPlayersLevel1, climber1 as climber1Level1, climber2 as climber2Level1 } from "../players/level1players.js";
 import { climber1 as climber1Level2, climber2 as climber2Level2 } from "../players/level2players.js";
 import { handleBreakpoints } from "../utils/breakpoints.js";
 import { updatePlayerLevel1 } from "../players/level1players.js";
 import { updatePlayerLevel2 } from "../players/level2players.js";
 import { initRope, updateRope, handleRopePhysics, getRopeDistanceSamples } from "../utils/rope.js";
 import { initMusic, toggleMusic } from "../utils/music.js";
+
 
 
 let animationId;
@@ -78,8 +79,11 @@ function initScene() {
 // Call after Camp Muir screen
 export function startLevel2() {
     cleanupLevel1(sharedState); // remove Level 1 elements
+    cleanupPlayersLevel1(sharedState.scene); // remove Level 1 climbers
 
-    fadeToLevel2Background("assets/mount-rainier-level2.jpg"); // Fade in new background
+    sharedState.keys = {};
+
+    // fadeToLevel2Background("assets/mount-rainier-level2.jpg"); // Fade in new background
 
     initLevel2(sharedState);
     sharedState.currentLevel = 2;
@@ -87,8 +91,10 @@ export function startLevel2() {
     sharedState.isNightClimb = true; // Set night climb state for level 2
     createLevel2Lights(sharedState.scene, climber1Level2, climber2Level2); // Create lights for climbers
 
-    updateHeadLampLighting(climber1Level2, climber2Level2, sharedState.isNightClimb, climber1Level2.position.x);
     initRope(sharedState.scene, climber1Level2, climber2Level2); // New rope for Level 2
+
+    updateHeadLampLighting(climber1Level2, climber2Level2, sharedState.isNightClimb, climber1Level2.position.x);
+
     animate(); // resume the loop now
 }
 
@@ -110,6 +116,8 @@ function animate() {
     } else if (sharedState.currentLevel === 2) {
         updateLevel2(sharedState, climber1);
         updatePlayerLevel2(sharedState);
+
+        updateHeadLampLighting(climber1, climber2, sharedState.isNightClimb, climber1.position.x);
     }
 
     // Check for Camp Muir platform (x = 214) trigger
@@ -134,7 +142,7 @@ function animate() {
     if (sharedState.currentLevel === 2 && sharedState.isNightClimb) {
         const fadeStart = 214;
         const fadeEnd = 376;
-        const currentX = sharedState.c1.x || 0; // Use climber 1's as main reference
+        const currentX = climber1.position.x || 0; // Use climber 1's as main reference or fallback to 0
 
         if (currentX >= fadeStart && currentX <= fadeEnd) {
             const progress = (currentX - fadeStart) / (fadeEnd - fadeStart);
@@ -191,7 +199,7 @@ function showCampMuirOverlay() {
 
   document.getElementById("startLevel2Btn").onclick = () => {
     overlay.classList.add("hidden");
-    startLevel2(); // Calls your existing function
+    startLevel2(); 
   };
 }
 
@@ -256,6 +264,7 @@ document.getElementById("startBtn").addEventListener("click", () => {
   document.getElementById("landingPage").style.display = "none";
   startGame();
 });
+
 
 document.getElementById("resumeBtn").addEventListener("click", resumeGame);
 

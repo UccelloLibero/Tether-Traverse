@@ -41,9 +41,9 @@ export function handleBreakpoints(climber1, state) {
             }
 
             // Show message if exists
-            if (bp.message) {
-                state.ui.showMessage(bp.message);
-            }
+            // if (bp.message) {
+            //     state.ui.showMessage(bp.message);
+            // }
 
             // Handle special cases
             if (bp.isCamp) {

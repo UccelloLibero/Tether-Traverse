@@ -1,10 +1,11 @@
 import { animateGearItems, createGear, detectGearPickup } from "../utils/gear.js";
 import { createGround, createPlatform } from "../utils/platforms.js";
 import { checkCollision } from "../utils/collision.js";
-import { climber1, climber2, initPlayersLevel2 } from "../players/level2players.js";
+import { climber1, climber2, initPlayersLevel2, updatePlayerLevel2 } from "../players/level2players.js";
 import { updateGearHUD, flashScreen } from "../ui/hud.js";
 import { handleBreakpoints } from "../utils/breakpoints.js";
 import { createLevel2Lights } from "../players/level2players.js";
+import { updateHeadLampLighting } from "../players/level2players.js";
 
 let localPlatforms = [];
 
@@ -22,10 +23,7 @@ export function initLevel2(state) {
     scene.add(climber2);
 
     state.climber1 = climber1;
-    state.climber2 = climber2;
-
-    state.c1 = { x: 214, y: 21, vy: 0, grounded: false };
-    state.c2 = { x: 212, y: 21, vy: 0, grounded: false };   
+    state.climber2 = climber2;  
 
     scene.add(state.rope);
 
@@ -46,6 +44,10 @@ export function updateLevel2(state, climber1) {
     state.c1.grounded = checkCollision(climber1, state.c1, localPlatforms);
     state.c2.grounded = checkCollision(climber2, state.c2, localPlatforms);
 
+    updatePlayerLevel2(state);
+
+    updateHeadLampLighting(state.climber1, state.climber2, true, state.climber1.position.x);
+
     // Handle responsive breakpoints
     // handleBreakpoints(state);
 }
@@ -59,6 +61,7 @@ export function cleanupLevel2(state) {
 
 export function loadLevel2(scene, platforms) {
     // Manually place 40 platforms for Level 2 (Camp Muir to Summit)
+    createPlatform(scene, platforms, 212, 23, 10, 0.5); // Camp Muir
     createPlatform(scene, platforms, 220, 20, 5, 0.5, true);
     createPlatform(scene, platforms, 226, 21, 5, 0.5, true);
     createPlatform(scene, platforms, 232, 22, 5, 0.5, true);
@@ -102,18 +105,3 @@ export function loadLevel2(scene, platforms) {
     createPlatform(scene, platforms, 454, 59);
     createPlatform(scene, platforms, 460, 60); // Summit
 }
-
-// export function triggerGameOver() {
-//     gamePaused = true; // Pause the game during game over
-//     isFalling = true;
-
-//     const overlay = document.getElementById("overlay");
-//     overlay.classList.remove("hidden");
-//     document.getElementById("levelTitle").textContent = "You've fallen into a crevasse!";
-//     document.getElementById("levelText").textContent = "The climb ends here. Glacier climbs are unforgiving.\n\Better luck next time.";
-
-//     const btn = document.createElement("button");
-//     btn.textContent = "Restart";
-//     btn.onclick = () => location.reload();
-//     document.getElementById("dialog").appendChild(btn);
-// }
