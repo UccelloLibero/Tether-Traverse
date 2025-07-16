@@ -1,4 +1,4 @@
-export function checkCollision(climber, stateObj, platforms) {
+export function checkCollision(climber, stateObj, platforms, state) {
   const r = 0.4;
 
   for (const p of platforms) {
@@ -12,6 +12,11 @@ export function checkCollision(climber, stateObj, platforms) {
     const touchingTop = climber.position.y - r <= top;
 
     if (withinHorizontal && touchingTop && isAbove && isFalling) {
+        state.lastSafePlatform = {
+        x: plat.position.x,
+        y: top
+      };
+      state.currentPlatform = p.index || 0; // Store the index of the current platform
       return top; // Return the platform Y value
     }
   }

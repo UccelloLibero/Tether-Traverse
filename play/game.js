@@ -13,6 +13,7 @@ import { updatePlayerLevel1 } from "../players/level1players.js";
 import { updatePlayerLevel2 } from "../players/level2players.js";
 import { initRope, updateRope, handleRopePhysics, getRopeDistanceSamples } from "../utils/rope.js";
 import { initMusic, toggleMusic } from "../utils/music.js";
+import { checkFall } from "../utils/fall.js";
 
 
 
@@ -87,6 +88,9 @@ export function startLevel2() {
     sharedState.keys = {};
     sharedState.tools = []; // Reset tools for Level 2
 
+    sharedState.water = 2.0; // Reset water for Level 2
+    sharedState.snacks = 10; // Reset snacks for Level 2
+
     // fadeToLevel2Background("assets/mount-rainier-level2.jpg"); // Fade in new background
 
     initLevel2(sharedState);
@@ -138,6 +142,8 @@ function animate() {
         showCampMuirOverlay();
         return; // halt animation loop until Level 2
     }
+
+    checkFall(sharedState, climber1, climber2);
 
     handleBreakpoints(climber1, sharedState);
 
@@ -298,3 +304,13 @@ document.addEventListener("keydown", (event) => {
         toggleMusic();
     }
 });
+
+document.getElementById("playAgainBtn").onclick = () => {
+  document.getElementById("gameOverScreen").classList.add("hidden");
+  restartGame(); 
+};
+
+document.getElementById("exitBtn").onclick = () => {
+  document.getElementById("gameOverScreen").classList.add("hidden");
+  window.location.href = "#landingPage"; // Reload to show landing
+};

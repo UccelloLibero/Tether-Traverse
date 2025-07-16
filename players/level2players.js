@@ -66,7 +66,7 @@ export function updatePlayerLevel2(state) {
     state.c2.y += state.c2.vy;
 
     // Collision
-    const platformY1 = checkCollision(state.climber1, state.c1, state.platforms);
+    const platformY1 = checkCollision(state.climber1, state.c1, state.platforms, state);
     if (platformY1 !== null) {
         state.c1.y = platformY1 + 0.4;
         state.c1.vy = 0;
@@ -79,7 +79,7 @@ export function updatePlayerLevel2(state) {
         state.c1.grounded = false;
     }
 
-    const platformY2 = checkCollision(state.climber2, state.c2, state.platforms);
+    const platformY2 = checkCollision(state.climber2, state.c2, state.platforms, state);
     if (platformY2 !== null) {
         state.c2.y = platformY2 + 0.4;
         state.c2.vy = 0;

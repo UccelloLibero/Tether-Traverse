@@ -1,5 +1,5 @@
 export function createGround(scene, platforms) {
-    const geometry = new THREE.BoxGeometry(300, 1, 1, 64, 1, 1);
+    const geometry = new THREE.BoxGeometry(100, 1, 1, 64, 1, 1);
     const position = geometry.attributes.position;
 
     for (let i = 0; i < position.count; i++) {
@@ -27,7 +27,7 @@ export function createGround(scene, platforms) {
     ground.position.y = -5.67;
     scene.add(ground);
 
-    platforms.push({ mesh: ground, y: -5 });
+    // platforms.push({ mesh: ground, y: -5 });
 }
 
 export function createPlatform(scene, platforms, x, y, w = 5, h = 0.5, withLight = false) {

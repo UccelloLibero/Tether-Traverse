@@ -33,7 +33,7 @@ export function initLevel2(state) {
 
     createLevel2Lights(scene, climber1, climber2);
 
-    createGround(scene, localPlatforms);
+    // createGround(scene, localPlatforms);
     loadLevel2(state.scene, localPlatforms);
 }
 
@@ -42,8 +42,8 @@ export function updateLevel2(state, climber1) {
 
     detectGearPickup(climber1, state, state.scene, updateGearHUD, flashScreen);
 
-    state.c1.grounded = checkCollision(climber1, state.c1, localPlatforms);
-    state.c2.grounded = checkCollision(climber2, state.c2, localPlatforms);
+    state.c1.grounded = checkCollision(climber1, state.c1, localPlatforms, state);
+    state.c2.grounded = checkCollision(climber2, state.c2, localPlatforms, state);
 
     updatePlayerLevel2(state);
 
@@ -62,7 +62,7 @@ export function cleanupLevel2(state) {
 
 export function loadLevel2(scene, platforms) {
     // Manually place 40 platforms for Level 2 (Camp Muir to Summit)
-    createPlatform(scene, platforms, 214, 19, 5, 0.5, true); // Camp Muir start
+    createPlatform(scene, platforms, 214, 19.5, 9, 0.5, true); // Camp Muir start
     createPlatform(scene, platforms, 220, 20, 5, 0.5, true);
     createPlatform(scene, platforms, 226, 21, 5, 0.5, true);
     createPlatform(scene, platforms, 232, 22, 5, 0.5, true);

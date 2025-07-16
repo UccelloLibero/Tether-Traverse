@@ -41,8 +41,8 @@ export function updateLevel1(state, climber1) {
 
     detectGearPickup(climber1, state, state.scene, updateGearHUD, flashScreen);
 
-    state.c1.grounded = checkCollision(climber1, state.c1, localPlatforms);
-    state.c2.grounded = checkCollision(climber2, state.c2, localPlatforms);
+    state.c1.grounded = checkCollision(climber1, state.c1, localPlatforms, state);
+    state.c2.grounded = checkCollision(climber2, state.c2, localPlatforms, state);
 
     // Handle responsive breakpoints
     // handleBreakpoints(state);

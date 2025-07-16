@@ -12,7 +12,7 @@ export const breakpoints = [
   { x: 34, name: "Panorama Point", elevation: 6800, waterUse: 0.5, snackUse: 2, message: "Take a break! Tatoosh Range views." },
   { x: 82, name: "Pebble Creek", elevation: 7200, waterUse: 0.5, snackUse: 2, message: "Rest stop before snowfields." },
   { x: 142, name: "Muir Snowfield", elevation: 8500, waterUse: 0.5, snackUse: 2, message: "Snow trek begins!" },
-  { x: 214, name: "Camp Muir", elevation: 10080, waterUse: 0.5, snackUse: 2, message: "Camp Muir reached. Prepare for night!", isCamp: true },
+//   { x: 214, name: "Camp Muir", elevation: 10080, waterUse: 0.5, snackUse: 2, message: "Camp Muir reached. Prepare for night!", isCamp: true },
   { x: 229, name: "Cathedral Gap", elevation: 11000, waterUse: 0.25, snackUse: 1, night: true, message: "Cross Cathedral Gap." },
   { x: 304, name: "Ingraham Flats", elevation: 11500, waterUse: 0.25, snackUse: 1, night: true, message: "Over Ingraham Glacier!" },
   { x: 376, name: "Disappointment Cleaver", elevation: 12300, waterUse: 0.25, snackUse: 1, night: true, message: "The Cleaver awaits!" },
