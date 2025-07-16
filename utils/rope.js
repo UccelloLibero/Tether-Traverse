@@ -82,3 +82,14 @@ export function handleRopePhysics(state, climber1, climber2, isMobile, pullStren
 export function getRopeDistanceSamples() {
   return ropeDistanceSamples;
 }
+
+export function cleanupRope(scene) {
+    if (ropeMesh) {
+        scene.remove(ropeMesh);
+        ropeMesh.geometry.dispose();
+        ropeMesh.material.dispose();
+        ropeMesh = null;
+    }
+
+    ropeDistanceSamples = []; // Clean any collected data for level 2
+}

@@ -1,20 +1,26 @@
 // import { THREE } from '../utils/three.js';
 import { checkCollision } from "../utils/collision.js";
 
-export let climber1, climber2;
 export let climber1Right, climber1Left, climber2Right, climber2Left;
 
 export let climber1Light, climber2Light;
 
+export let climber1 = null;
+export let climber2 = null;
+
 const loader = new THREE.TextureLoader();
 
 export function initPlayersLevel2(scene) {
+
+    if (climber1) scene.remove(climber1);
+    if (climber2) scene.remove(climber2);
+
     const planeGeometry = new THREE.PlaneGeometry(1, 1.5);
 
     climber1Right = loader.load('assets/climbers/climber1-level2-right.png');
-    climber1Left = loader.load('assets/climbers/climber1-level2-left.jpeg');
+    climber1Left = loader.load('assets/climbers/climber1-level2-left.png');
     climber2Right = loader.load('assets/climbers/climber2-level2-right.png');
-    climber2Left = loader.load('assets/climbers/climber2-level2-left.jpeg');
+    climber2Left = loader.load('assets/climbers/climber2-level2-left.png');
 
     const climber1Material = new THREE.MeshLambertMaterial({ map: climber1Right, transparent: true });
     climber1 = new THREE.Mesh(planeGeometry, climber1Material);
@@ -29,11 +35,12 @@ export function initPlayersLevel2(scene) {
 
 export function updatePlayerLevel2(state) {
     const moveSpeed = 0.1;
-    const jumpPower = 0.35;
-    const gravity = -0.015;
+    const jumpPower = 0.25;
+    const gravity = -0.010;
+    const groundY = 20; // Adjusted ground level for Level 2
     const keys = state.keys;
 
-    // === Horizontal Movement ===
+    // Horizontal Movement
     if (keys["ArrowLeft"]) {
         state.c1.x -= moveSpeed;
         climber1.material.map = climber1Left;
@@ -50,35 +57,42 @@ export function updatePlayerLevel2(state) {
         climber2.material.map = climber2Right;
     }
 
-    // === Apply Gravity ===
+    // Apply Gravity
     state.c1.vy += gravity;
     state.c2.vy += gravity;
 
-    // === Apply Vertical Motion ===
+    // Apply Vertical Motion
     state.c1.y += state.c1.vy;
     state.c2.y += state.c2.vy;
 
-    // === Collision Detection: Player 1 ===
-    const platformY1 = checkCollision(climber1, state.c1, state.platforms);
-    if (platformY1 !== null && state.c1.vy <= 0) {
+    // Collision
+    const platformY1 = checkCollision(state.climber1, state.c1, state.platforms);
+    if (platformY1 !== null) {
         state.c1.y = platformY1 + 0.4;
+        state.c1.vy = 0;
+        state.c1.grounded = true;
+    } else if (state.c1.y <= groundY) {
+        state.c1.y = groundY;
         state.c1.vy = 0;
         state.c1.grounded = true;
     } else {
         state.c1.grounded = false;
     }
 
-    // === Collision Detection: Player 2 ===
-    const platformY2 = checkCollision(climber2, state.c2, state.platforms);
-    if (platformY2 !== null && state.c2.vy <= 0) {
+    const platformY2 = checkCollision(state.climber2, state.c2, state.platforms);
+    if (platformY2 !== null) {
         state.c2.y = platformY2 + 0.4;
+        state.c2.vy = 0;
+        state.c2.grounded = true;
+    } else if (state.c2.y <= groundY) {
+        state.c2.y = groundY;
         state.c2.vy = 0;
         state.c2.grounded = true;
     } else {
         state.c2.grounded = false;
     }
 
-    // === Jumping ===
+    // Jumping
     if (keys["ArrowUp"] && state.c1.grounded) {
         state.c1.vy = jumpPower;
         state.c1.grounded = false;
@@ -88,7 +102,7 @@ export function updatePlayerLevel2(state) {
         state.c2.grounded = false;
     }
 
-    // === Idle Bounce (only when grounded) ===
+    // Idle Bounce (only when grounded)
     const t = Date.now() * 0.003;
     if (state.c1.grounded) {
         climber1.position.x += Math.sin(t * 0.5) * 0.01;
@@ -99,7 +113,7 @@ export function updatePlayerLevel2(state) {
         climber2.position.y += Math.cos(t + Math.PI) * 0.005;
     }
 
-    // === Update Sprite Positions ===
+    // Update 3D mesh positions
     climber1.position.x = state.c1.x;
     climber1.position.y = state.c1.y;
 
@@ -132,7 +146,7 @@ export function updateHeadLampLighting(climber1, climber2, isNightClimb, current
     if (isNightClimb) {
         if (currentX >= fadeStart && currentX <= fadeEnd) {
             const progress = (currentX - fadeStart) / (fadeEnd - fadeStart);
-            const newIntensity = 5 * (1 - progress); // Fade from 5 to 0
+            const newIntensity = Math.max(0, Math.min(1.5, 5 * (1 - progress))); // Fade from 5 to 0
             climber1Light.intensity = newIntensity;
             climber2Light.intensity = newIntensity;
         } 

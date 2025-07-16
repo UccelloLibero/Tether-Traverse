@@ -81,7 +81,11 @@ export function startLevel2() {
     cleanupLevel1(sharedState); // remove Level 1 elements
     cleanupPlayersLevel1(sharedState.scene); // remove Level 1 climbers
 
+    sharedState.c1 = { x: 214, y: 23, vy: 0, grounded: false };
+    sharedState.c2 = { x: 212, y: 23, vy: 0, grounded: false };
+
     sharedState.keys = {};
+    sharedState.tools = []; // Reset tools for Level 2
 
     // fadeToLevel2Background("assets/mount-rainier-level2.jpg"); // Fade in new background
 
@@ -90,6 +94,8 @@ export function startLevel2() {
     sharedState.gamePaused = false;
     sharedState.isNightClimb = true; // Set night climb state for level 2
     createLevel2Lights(sharedState.scene, climber1Level2, climber2Level2); // Create lights for climbers
+
+    cleanupRope(sharedState.scene); // Remove old rope
 
     initRope(sharedState.scene, climber1Level2, climber2Level2); // New rope for Level 2
 
@@ -102,6 +108,11 @@ export function startLevel2() {
 // Main animation loop
 function animate() {
     animationId = requestAnimationFrame(animate);
+
+    const renderer = sharedState.renderer; 
+    renderer.autoClear = true; // Clear the renderer automatically
+    renderer.clear();
+
     if (sharedState.gamePaused) return;
 
     // Pick climbers per level
@@ -154,6 +165,9 @@ function animate() {
             document.getElementById("nightOverlay").style.opacity = 0; // Fully transparent after fade
         }
     }
+
+    sharedState.renderer.clearDepth();  // Clears depth between frames
+    sharedState.renderer.clear();
 
     sharedState.renderer.render(sharedState.scene, sharedState.camera);
 

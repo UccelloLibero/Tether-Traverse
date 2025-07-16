@@ -6,6 +6,7 @@ import { updateGearHUD, flashScreen } from "../ui/hud.js";
 import { handleBreakpoints } from "../utils/breakpoints.js";
 import { createLevel2Lights } from "../players/level2players.js";
 import { updateHeadLampLighting } from "../players/level2players.js";
+import { updatePlayerLevel1 } from "../players/level1players.js";
 
 let localPlatforms = [];
 
@@ -61,7 +62,7 @@ export function cleanupLevel2(state) {
 
 export function loadLevel2(scene, platforms) {
     // Manually place 40 platforms for Level 2 (Camp Muir to Summit)
-    createPlatform(scene, platforms, 212, 23, 10, 0.5); // Camp Muir
+    createPlatform(scene, platforms, 214, 19, 5, 0.5, true); // Camp Muir start
     createPlatform(scene, platforms, 220, 20, 5, 0.5, true);
     createPlatform(scene, platforms, 226, 21, 5, 0.5, true);
     createPlatform(scene, platforms, 232, 22, 5, 0.5, true);

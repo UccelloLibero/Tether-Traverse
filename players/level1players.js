@@ -4,7 +4,6 @@ import { checkCollision } from "../utils/collision.js";
 export let climber1, climber2;
 export let climber1Right, climber1Left, climber2Right, climber2Left;
 
-
 const loader = new THREE.TextureLoader();
 
 export function initPlayersLevel1(scene) {
@@ -50,15 +49,15 @@ export function updatePlayerLevel1(state) {
         climber2.material.map = climber2Right;
     }
 
-    // --- Apply gravity ---
+    // Apply gravity 
     state.c1.vy += gravity;
     state.c2.vy += gravity;
 
-    // --- Apply vertical motion ---
+    // Apply vertical motion 
     state.c1.y += state.c1.vy;
     state.c2.y += state.c2.vy;
 
-    // --- Platform collision detection ---
+    // Platform collision detection 
     const platformY1 = checkCollision(climber1, state.c1, state.platforms);
     if (platformY1 !== null) {
         state.c1.y = platformY1 + 0.4; // snap to top of platform
@@ -85,7 +84,7 @@ export function updatePlayerLevel1(state) {
         state.c2.grounded = false;
     }
 
-    // --- Jumping ---
+    // Jumping 
     if (keys["ArrowUp"] && state.c1.grounded) {
         state.c1.vy = jumpPower;
         state.c1.grounded = false;
@@ -96,7 +95,7 @@ export function updatePlayerLevel1(state) {
         state.c2.grounded = false;
     }
 
-    // --- Idle bounce for fun ---
+    // Idle bounce for fun 
     const t = Date.now() * 0.003;
     if (state.c1.grounded) {
         climber1.position.x += Math.sin(t * 0.5) * 0.01;
@@ -107,7 +106,7 @@ export function updatePlayerLevel1(state) {
         climber2.position.y += Math.cos(t + Math.PI) * 0.005;
     }
 
-    // --- Update 3D mesh positions ---
+    // Update 3D mesh positions
     climber1.position.x = state.c1.x;
     climber1.position.y = state.c1.y;
 
@@ -120,13 +119,14 @@ export function cleanupPlayersLevel1(scene) {
         climber1.geometry.dispose();
         climber1.material.dispose();
         scene.remove(climber1);
-        climber1 = null;
     }
 
     if (climber2 && climber2.parent) {
         climber2.geometry.dispose();
         climber2.material.dispose();
         scene.remove(climber2);
-        climber2 = null;
     }
+
+    climber1 = null;
+    climber2 = null;
 }
