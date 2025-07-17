@@ -1,5 +1,5 @@
 import { animateGearItems, createGear, detectGearPickup } from "../utils/gear.js";
-import { createGround, createPlatform } from "../utils/platforms.js";
+import {  createPlatform } from "../utils/platforms.js";
 import { checkCollision } from "../utils/collision.js";
 import { climber1, climber2, initPlayersLevel2, updatePlayerLevel2 } from "../players/level2players.js";
 import { updateGearHUD, flashScreen } from "../ui/hud.js";

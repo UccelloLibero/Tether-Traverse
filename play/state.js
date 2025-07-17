@@ -22,4 +22,5 @@ export const sharedState = {
     keys: {},
     water: 2.0,
     snacks: 10,
+    justResetFall: false,
 };

@@ -119,6 +119,7 @@ function animate() {
 
     if (sharedState.gamePaused) return;
 
+
     // Pick climbers per level
     const climber1 = sharedState.currentLevel === 1 ? climber1Level1 : climber1Level2;
     const climber2 = sharedState.currentLevel === 1 ? climber2Level1 : climber2Level2;
@@ -135,6 +136,8 @@ function animate() {
         updateHeadLampLighting(climber1, climber2, sharedState.isNightClimb, climber1.position.x);
     }
 
+    checkFall(sharedState, climber1, climber2);
+
     // Check for Camp Muir platform (x = 214) trigger
     if (sharedState.currentLevel === 1 && climber1.position.x >= 214 && !sharedState.reachedCampMuir) {
         sharedState.reachedCampMuir = true;
@@ -143,8 +146,7 @@ function animate() {
         return; // halt animation loop until Level 2
     }
 
-    checkFall(sharedState, climber1, climber2);
-
+    
     handleBreakpoints(climber1, sharedState);
 
     handleRopePhysics(sharedState, climber1, climber2, isMobile, pullStrength, maxRopeLength);

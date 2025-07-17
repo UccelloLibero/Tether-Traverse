@@ -27,10 +27,12 @@ export function initPlayersLevel1(scene) {
 
 export function updatePlayerLevel1(state) {
     const moveSpeed = 0.1;
-    const jumpPower = 0.35;
+    const jumpPower = 0.30;
     const gravity = -0.015;
     const groundY = -4.5;
     const keys = state.keys;
+
+    // if (state.justResetFall) return;
 
     // Horizontal movement
     if (keys["ArrowLeft"]) {

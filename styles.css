@@ -31,7 +31,8 @@ body {
       font-size: 3rem;
       font-family: "DynaPuff", cursive;;
       margin-bottom: 1rem;
-      color: #4cbb17;
+      color: rgb(160, 63, 164);
+      /* color: #4cbb17; */
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
     }
     
@@ -66,7 +67,8 @@ body {
     }
     
     .control-box h3 {
-      color: #4cbb17;
+      /* color: #4cbb17; */
+      color: rgb(160, 63, 164);
       margin-top: 0;
       font-family: "DynaPuff", cursive;
     }
@@ -79,7 +81,8 @@ body {
     #startBtn {
       font-size: 1.5rem;
       padding: 1rem 2rem;
-      background: #4cbb17;
+      background: rgb(160, 63, 164);
+      /* background: #4cbb17; */
       color: #000;
       border: none;
       border-radius: 10px;

@@ -11,15 +11,14 @@ export function checkCollision(climber, stateObj, platforms, state) {
     const withinHorizontal = Math.abs(climber.position.x - plat.position.x) < w + r;
     const touchingTop = climber.position.y - r <= top;
 
+    // Register landing only if player is falling onto the top of a platform
     if (withinHorizontal && touchingTop && isAbove && isFalling) {
-        state.lastSafePlatform = {
-        x: plat.position.x,
-        y: top
-      };
-      state.currentPlatform = p.index || 0; // Store the index of the current platform
-      return top; // Return the platform Y value
+      stateObj.grounded = true;
+      return top; // Snap to this platform's top
     }
   }
 
-  return null; // No platform landed on
+  // No collision — player is mid-air or falling
+  stateObj.grounded = false;
+  return null;
 }
