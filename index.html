@@ -9,6 +9,46 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <style>
+    /* Summit celebration animation */
+    #summitCelebration {
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      overflow:hidden;
+      z-index:1200;
+      font-family:"Fira Sans", sans-serif;
+    }
+    #summitCelebration.hidden { display:none; }
+    #summitCelebration .celebration-message {
+      position:absolute;
+      top:25%;
+      width:100%;
+      text-align:center;
+      font-size:2rem;
+      font-weight:700;
+      color:#fff;
+      text-shadow:0 0 8px #0af,0 0 16px #09f;
+      animation: popIn 0.8s ease-out;
+    }
+    #summitCelebration .snowflake {
+      position:absolute;
+      top:-5%;
+      font-size:clamp(16px, 2vw, 34px);
+      animation: fall linear forwards;
+      opacity:0.9;
+      will-change: transform;
+      filter: drop-shadow(0 0 4px #fff);
+    }
+    @keyframes fall {
+      to { transform: translateY(110vh) rotate(360deg); opacity:0; }
+    }
+    @keyframes popIn {
+      0% { transform:scale(0.4); opacity:0; }
+      70% { transform:scale(1.05); opacity:1; }
+      100% { transform:scale(1); }
+    }
+  </style>
 </head>
 <body>
   <!-- Landing Page -->
@@ -68,7 +108,7 @@
   </div>
 
   <!-- Snowflake Confetti (hidden until summit) -->
-  <div id="summitCelebration" class="hidden"></div>
+  <div id="summitCelebration" class="hidden" aria-hidden="true"></div>
 
   <!-- Pause Menu -->
   <div id="pauseMenu">

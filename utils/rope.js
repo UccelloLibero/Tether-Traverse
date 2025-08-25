@@ -32,46 +32,26 @@ export function updateRope(climber1, climber2, camera) {
   ropeMesh.geometry = new THREE.TubeGeometry(newCurve, 20, 0.01, 8, false);
 }
 
-export function handleRopePhysics(state, climber1, climber2, isMobile, pullStrength, maxRopeLength) {
+export function handleRopePhysics(state, climber1, climber2, isMobile, pullStrength, maxRopeLength, dt = 0.016) {
   const dx = climber1.position.x - climber2.position.x;
   const dy = climber1.position.y - climber2.position.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
 
   if (state.c2.x > state.c1.x - 0.2) {
     state.c2.x = state.c1.x - 0.2;
-    state.c2.x -= 0.02;
   }
 
   if (dist > maxRopeLength) {
-    const t = Date.now() * 0.002;
-    const angle = Math.atan2(dy, dx);
-    const perpAngle = angle + Math.PI / 2;
-    const jiggleStrength = 0.5;
-    const frequency = 12;
-    const decay = 1.0;
+    const excess = dist - maxRopeLength;
+    const nx = dx / dist;
+    const ny = dy / dist;
+    const correction = excess * 0.5; // split correction
 
-    const dxMid = (climber1.position.x + climber2.position.x) / 2;
-    const dyMid = (climber1.position.y + climber2.position.y) / 2;
-
-    const dist1 = Math.hypot(climber1.position.x - dxMid, climber1.position.y - dyMid);
-    const dist2 = Math.hypot(climber2.position.x - dxMid, climber2.position.y - dyMid);
-
-    if (dist2 > dist1) {
-      const jiggleX = Math.cos(perpAngle) * Math.sin(t * frequency) * jiggleStrength * decay;
-      const jiggleY = Math.sin(perpAngle) * Math.cos(t * frequency * 0.8) * jiggleStrength * decay;
-      climber2.position.x += jiggleX;
-      climber2.position.y += jiggleY;
-    }
-
-    if (isMobile) {
-      state.c2.x += Math.cos(angle) * pullStrength;
-      climber2.position.y += Math.sin(angle) * pullStrength;
-    } else {
-      state.c1.x = dxMid + Math.cos(angle) * maxRopeLength / 2;
-      state.c2.x = dxMid - Math.cos(angle) * maxRopeLength / 2;
-      climber1.position.y = dyMid + Math.sin(angle) * maxRopeLength / 2;
-      climber2.position.y = dyMid - Math.sin(angle) * maxRopeLength / 2;
-    }
+    // Apply soft correction scaled by dt for smoothness
+    state.c1.x -= nx * correction * (8 * dt);
+    state.c2.x += nx * correction * (8 * dt);
+    climber1.position.y -= ny * correction * (8 * dt);
+    climber2.position.y += ny * correction * (8 * dt);
   }
 
   if (Math.random() < 0.1) {

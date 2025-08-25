@@ -1,5 +1,5 @@
 import { animateGearItems, createGear, detectGearPickup } from "../utils/gear.js";
-import {  createPlatform } from "../utils/platforms.js";
+import { createGround, createPlatform } from "../utils/platforms.js";
 import { checkCollision } from "../utils/collision.js";
 import { climber1, climber2, initPlayersLevel2, updatePlayerLevel2 } from "../players/level2players.js";
 import { updateGearHUD, flashScreen } from "../ui/hud.js";
@@ -37,15 +37,13 @@ export function initLevel2(state) {
     loadLevel2(state.scene, localPlatforms);
 }
 
-export function updateLevel2(state, climber1) {
+export function updateLevel2(state, climber1, dt) {
     animateGearItems();
 
     detectGearPickup(climber1, state, state.scene, updateGearHUD, flashScreen);
 
     state.c1.grounded = checkCollision(climber1, state.c1, localPlatforms, state);
     state.c2.grounded = checkCollision(climber2, state.c2, localPlatforms, state);
-
-    updatePlayerLevel2(state);
 
     updateHeadLampLighting(state.climber1, state.climber2, true, state.climber1.position.x);
 

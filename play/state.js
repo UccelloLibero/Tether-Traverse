@@ -23,4 +23,7 @@ export const sharedState = {
     water: 2.0,
     snacks: 10,
     justResetFall: false,
+    lastSafePlatform: null,   // track last safe landing spot
+    skipFrame: false,         // skip heavy physics (rope) for 1 frame after reset
+    fallTransitionActive: false, // smooth fall reset in progress
 };

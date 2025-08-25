@@ -18,6 +18,7 @@ import { checkFall } from "../utils/fall.js";
 
 
 let animationId;
+let lastTime = performance.now();
 
 // Detect mobile
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -112,6 +113,9 @@ export function startLevel2() {
 // Main animation loop
 function animate() {
     animationId = requestAnimationFrame(animate);
+    const now = performance.now();
+    const dt = Math.min(0.05, (now - lastTime) / 1000); // clamp to avoid huge jumps
+    lastTime = now;
 
     const renderer = sharedState.renderer; 
     renderer.autoClear = true; // Clear the renderer automatically
@@ -127,16 +131,24 @@ function animate() {
     if (!climber1 || !climber1.position || !climber2 || !climber2.position) return;
 
     if (sharedState.currentLevel === 1) {
-        updateLevel1(sharedState, climber1);
-        updatePlayerLevel1(sharedState);
+        updateLevel1(sharedState, climber1, dt);
+        updatePlayerLevel1(sharedState, dt);
     } else if (sharedState.currentLevel === 2) {
-        updateLevel2(sharedState, climber1);
-        updatePlayerLevel2(sharedState);
+        updateLevel2(sharedState, climber1, dt);
+        updatePlayerLevel2(sharedState, dt);
 
         updateHeadLampLighting(climber1, climber2, sharedState.isNightClimb, climber1.position.x);
     }
 
     checkFall(sharedState, climber1, climber2);
+
+    // If we just reset this frame, skip rope physics & continue minimal render
+    if (sharedState.skipFrame) {
+        sharedState.skipFrame = false;
+        updateCamera(sharedState.camera, climber1, climber2);
+        sharedState.renderer.render(sharedState.scene, sharedState.camera);
+        return;
+    }
 
     // Check for Camp Muir platform (x = 214) trigger
     if (sharedState.currentLevel === 1 && climber1.position.x >= 214 && !sharedState.reachedCampMuir) {
@@ -149,7 +161,7 @@ function animate() {
     
     handleBreakpoints(climber1, sharedState);
 
-    handleRopePhysics(sharedState, climber1, climber2, isMobile, pullStrength, maxRopeLength);
+    handleRopePhysics(sharedState, climber1, climber2, isMobile, pullStrength, maxRopeLength, dt);
     updateRope(climber1, climber2, sharedState.camera);
 
     updateCamera(sharedState.camera, climber1, climber2);

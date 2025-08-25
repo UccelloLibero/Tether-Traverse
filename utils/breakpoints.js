@@ -5,8 +5,6 @@ import { triggerOverlay } from "../ui/overlays.js";
 import { startSummitCelebration } from "../ui/overlays.js";
 import { getRopeDistanceSamples, maxRopeLength } from "./rope.js";
 
-const ropeSamples = getRopeDistanceSamples();
-
 export const breakpoints = [
     { x: 0, name: "Paradise Trailhead", elevation: 5400, waterUse: 0, snackUse: 0 },
   { x: 34, name: "Panorama Point", elevation: 6800, waterUse: 0.5, snackUse: 2, message: "Take a break! Tatoosh Range views." },
@@ -24,50 +22,48 @@ let triggerBreakpoints = new Set();
 
 
 export function handleBreakpoints(climber1, state) {
-    const playerX = climber1.position.x;
+  const playerX = climber1.position.x;
 
-    for (const bp of breakpoints) {
-        if (!triggerBreakpoints.has(bp.x) && playerX >= bp.x) {
-            triggerBreakpoints.add(bp.x);
-            
-            state.snacks -= bp.snackUse || 0; // Deduct snacks
-            state.water -= bp.waterUse || 0; // Deduct water
+  for (const bp of breakpoints) {
+    if (!triggerBreakpoints.has(bp.x) && playerX >= bp.x) {
+      triggerBreakpoints.add(bp.x);
 
-            // Update HUD stats
-            updateHUDStats(state, bp, breakpoints);
+      state.snacks -= bp.snackUse || 0;
+      state.water -= bp.waterUse || 0;
 
-            if (bp.message) {
-                fadeOutAndPause(`${bp.name} (${bp.elevation} ft)`, bp.message);
-            }
+      updateHUDStats(state, bp, breakpoints);
 
-            // Show message if exists
-            // if (bp.message) {
-            //     state.ui.showMessage(bp.message);
-            // }
+      // Special cases first (skip generic fadeOut for these)
+      if (bp.isCamp) {
+        state.gamePaused = true;
+        triggerOverlay("Camp Muir Reached", bp.message, () => {
+          startLevel2();
+        });
+        continue;
+      }
 
-            // Handle special cases
-            if (bp.isCamp) {
-                state.gamePaused = true;
-                triggerOverlay("Camp Muir Reached", bp.message, () => {
-                    // fadeToLevel2Background("assets/mount-rainier-level2.jpg"); // make sure this is defined
-                    startLevel2();
-                });
-                } 
-                else if (bp.name === "Columbia Crest") {
-                    triggerOverlay("Summit Reached!", bp.message, () => {
-                        const ropeSamples = getRopeDistanceSamples();
-                        const withinRange = ropeSamples.filter(d => d <= maxRopeLength).length;
-                        const total = ropeSamples.length;
-                        const percent = total > 0 ? Math.round((withinRange / total) * 100) : 0;
+      if (bp.name === "Columbia Crest") {
+        const ropeSamples = getRopeDistanceSamples();
+        const withinRange = ropeSamples.filter(d => d <= maxRopeLength).length;
+        const total = ropeSamples.length;
+        const percent = total ? Math.round((withinRange / total) * 100) : 0;
 
-                        startSummitCelebration(percent); // Pass it into your celebration logic
-                    });
-                } 
-                else if (bp.message) {
-                    triggerOverlay(`${bp.name} (${bp.elevation} ft)`, bp.message);
-                }
-        }
+        // Show overlay with continue; also auto-start celebration after short delay
+        triggerOverlay("Summit Reached!", `${bp.message}\nRope safety: ${percent}%`, () => {
+          startSummitCelebration(percent);
+        });
+
+        // Auto trigger if player doesn't press Continue in 4s
+        setTimeout(() => startSummitCelebration(percent), 4000);
+        continue;
+      }
+
+      // Generic breakpoint overlay (unified)
+      if (bp.message) {
+        triggerOverlay(`${bp.name} (${bp.elevation} ft)`, bp.message);
+      }
     }
+  }
 }
 
 export function resetBreakpoints() {

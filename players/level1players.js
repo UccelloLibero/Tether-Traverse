@@ -25,41 +25,42 @@ export function initPlayersLevel1(scene) {
     scene.add(climber2);
 }
 
-export function updatePlayerLevel1(state) {
-    const moveSpeed = 0.1;
-    const jumpPower = 0.30;
-    const gravity = -0.015;
+export function updatePlayerLevel1(state, dt = 0.016) {
+    // Tunable movement constants (time‑based):
+    // Jump apex height ≈ (JUMP_SPEED^2) / (2 * |GRAVITY|)
+    // With 12^2 / (2*18) = 144 / 36 = 4 units (≈ previous feel).
+    const H_SPEED = 2;        // units / second
+    const JUMP_SPEED = 12;     // was 6
+    const GRAVITY = -18;      // was -20 (slightly lighter to extend airtime)
     const groundY = -4.5;
     const keys = state.keys;
 
-    // if (state.justResetFall) return;
-
     // Horizontal movement
     if (keys["ArrowLeft"]) {
-        state.c1.x -= moveSpeed;
+        state.c1.x -= H_SPEED * dt;
         climber1.material.map = climber1Left;
     } else if (keys["ArrowRight"]) {
-        state.c1.x += moveSpeed;
+        state.c1.x += H_SPEED * dt;
         climber1.material.map = climber1Right;
     }
 
     if (keys["KeyA"]) {
-        state.c2.x -= moveSpeed;
+        state.c2.x -= H_SPEED * dt;
         climber2.material.map = climber2Left;
     } else if (keys["KeyD"]) {
-        state.c2.x += moveSpeed;
+        state.c2.x += H_SPEED * dt;
         climber2.material.map = climber2Right;
     }
 
-    // Apply gravity 
-    state.c1.vy += gravity;
-    state.c2.vy += gravity;
+    // Gravity
+    state.c1.vy += GRAVITY * dt;
+    state.c2.vy += GRAVITY * dt;
 
-    // Apply vertical motion 
-    state.c1.y += state.c1.vy;
-    state.c2.y += state.c2.vy;
+    // Integrate
+    state.c1.y += state.c1.vy * dt;
+    state.c2.y += state.c2.vy * dt;
 
-    // Platform collision detection 
+    // Collision detection 
     const platformY1 = checkCollision(climber1, state.c1, state.platforms, state);
     if (platformY1 !== null) {
         state.c1.y = platformY1 + 0.4; // snap to top of platform
@@ -88,27 +89,16 @@ export function updatePlayerLevel1(state) {
 
     // Jumping 
     if (keys["ArrowUp"] && state.c1.grounded) {
-        state.c1.vy = jumpPower;
+        state.c1.vy = JUMP_SPEED;
         state.c1.grounded = false;
     }
 
     if (keys["KeyW"] && state.c2.grounded) {
-        state.c2.vy = jumpPower;
+        state.c2.vy = JUMP_SPEED;
         state.c2.grounded = false;
     }
 
-    // Idle bounce for fun 
-    const t = Date.now() * 0.003;
-    if (state.c1.grounded) {
-        climber1.position.x += Math.sin(t * 0.5) * 0.01;
-        climber1.position.y += Math.cos(t) * 0.005;
-    }
-    if (state.c2.grounded) {
-        climber2.position.x += Math.sin(t * 0.5 + Math.PI) * 0.01;
-        climber2.position.y += Math.cos(t + Math.PI) * 0.005;
-    }
-
-    // Update 3D mesh positions
+    // Apply to meshes
     climber1.position.x = state.c1.x;
     climber1.position.y = state.c1.y;
 
