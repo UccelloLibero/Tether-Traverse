@@ -1,7 +1,7 @@
 let ropeMesh;
 let ropeDistanceSamples = [];
 
-export const maxRopeLength = 2.5; // Maximum length of the rope
+export const maxRopeLength = 3; // Maximum length of the rope
 
 export function initRope(scene, climber1, climber2) {
   const ropePath = new THREE.CatmullRomCurve3([

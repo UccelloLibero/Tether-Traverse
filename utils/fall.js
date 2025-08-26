@@ -1,36 +1,70 @@
 export function checkFall(state, climber1, climber2) {
-  // Record a safe platform ONLY when both are grounded (reduces jitter saves)
-  if (state.c1?.grounded && state.c2?.grounded) {
-    const safeY = Math.max(climber1.position.y, climber2.position.y);
-    const safeX = (climber1.position.x + climber2.position.x) / 2;
-    if (!state.lastSafePlatform || safeY >= state.lastSafePlatform.y - 0.01) {
-      state.lastSafePlatform = { x: safeX, y: safeY };
+  // --- Early outs / gating ---
+  if (state.gamePaused) return;
+  if (state.justResetFall) return;
+
+  // Suppress level 2 fall checks for first 1000ms (spawn settling)
+  if (
+    state.currentLevel === 2 &&
+    performance.now() - state.level2StartTime < 1000
+  )
+    return;
+
+  // Update last safe platform from any grounded climber (higher one wins)
+  const c1Grounded = !!state.c1?.grounded;
+  const c2Grounded = !!state.c2?.grounded;
+  if (c1Grounded || c2Grounded) {
+    const higher =
+      climber1.position.y >= climber2.position.y ? climber1 : climber2;
+    if (
+      !state.lastSafePlatform ||
+      higher.position.y >= state.lastSafePlatform.y - 0.05
+    ) {
+      state.lastSafePlatform = { x: higher.position.x, y: higher.position.y };
     }
   }
 
-  if (state.justResetFall || !state.lastSafePlatform) return;
-
+  const minY = Math.min(climber1.position.y, climber2.position.y);
   const avgY = (climber1.position.y + climber2.position.y) / 2;
-  const fallDistance = state.lastSafePlatform.y - avgY;
 
+  const haveRef = !!state.lastSafePlatform;
+  const fallDistAvg = haveRef ? state.lastSafePlatform.y - avgY : 0;
+  const fallDistMin = haveRef ? state.lastSafePlatform.y - minY : 0;
+
+  // Tuning constants
   const LEVEL1_RESET_DISTANCE = 4;
-  const LEVEL2_GAMEOVER_DISTANCE = 12;
+  const LEVEL2_DROP_DISTANCE = 6;
+  const LEVEL2_VOID_Y = 13; // lowered so actual void is reachable
 
-  if (state.currentLevel === 1 && fallDistance > LEVEL1_RESET_DISTANCE) {
+  // Level 1 soft reset
+  if (
+    state.currentLevel === 1 &&
+    haveRef &&
+    fallDistAvg > LEVEL1_RESET_DISTANCE
+  ) {
     state.justResetFall = true;
     smoothResetToLastPlatform(state, climber1, climber2);
     return;
   }
 
-  if (state.currentLevel === 2 && fallDistance > LEVEL2_GAMEOVER_DISTANCE) {
-    state.justResetFall = true;
-    triggerGameOver(state);
-    showFallOverlay("Fell into a crevasse!", "No safe way out.");
-    state.skipFrame = true;
-    setTimeout(() => (state.justResetFall = false), 800);
+  // Level 2 hard game over
+  if (state.currentLevel === 2) {
+    const voidKill = minY < LEVEL2_VOID_Y; // fell into void space
+    const dropKill = haveRef && fallDistMin > LEVEL2_DROP_DISTANCE;
+    if (voidKill || dropKill) {
+      // Prevent re-entry if screen already up
+      const screen = document.getElementById("gameOverScreen");
+      if (screen && !screen.classList.contains("hidden")) return;
+      state.justResetFall = true;
+      triggerGameOver(
+        state,
+        "You've fallen into a crevasse. This is the end for you, for now. But you can try to climb again."
+      );
+    }
   }
 }
 
+// (Keep resetToLastPlatform & smoothResetToLastPlatform for Level 1)
 function resetToLastPlatform(state, climber1, climber2) {
   const last = state.lastSafePlatform;
   if (!last) return;
@@ -49,44 +83,6 @@ function resetToLastPlatform(state, climber1, climber2) {
   state.c2.vy = 0;
   state.c1.grounded = true;
   state.c2.grounded = true;
-}
-
-function showFallOverlay(title, message) {
-  const overlay = document.getElementById("fall-overlay");
-  if (!overlay) return;
-  overlay.classList.remove("hidden");
-  const t = document.getElementById("fall-title");
-  const m = document.getElementById("fall-message");
-  if (t) t.textContent = title;
-  if (m) m.textContent = message;
-  setTimeout(() => overlay.classList.add("hidden"), 2200);
-}
-
-function triggerGameOver(state) {
-  state.gamePaused = true;
-  const screen = document.getElementById("gameOverScreen");
-  if (!screen) return;
-  screen.classList.remove("hidden");
-
-  const playAgain = document.getElementById("playAgainBtn");
-  const exit = document.getElementById("exitBtn");
-
-  if (playAgain) {
-    playAgain.onclick = () => {
-      state.currentLevel = 1;
-      state.lastSafePlatform = null;
-      state.tools = [];
-      state.snacks = 10;
-      state.water = 2.0;
-      screen.classList.add("hidden");
-      window.location.reload();
-    };
-  }
-  if (exit) {
-    exit.onclick = () => {
-      window.location.href = "index.html";
-    };
-  }
 }
 
 function smoothResetToLastPlatform(state, climber1, climber2) {
@@ -121,6 +117,57 @@ function smoothResetToLastPlatform(state, climber1, climber2) {
   }, 1500);
 }
 
+// (Optional: Level 1 fall overlay only)
+function showFallOverlay(title, message) {
+  // Level 2 no longer uses this; keep for Level 1 soft reset feedback if needed.
+  const overlay = document.getElementById("fall-overlay");
+  if (!overlay) return;
+  overlay.classList.remove("hidden");
+  const t = document.getElementById("fall-title");
+  const m = document.getElementById("fall-message");
+  if (t) t.textContent = title;
+  if (m) m.textContent = message;
+  overlay.style.zIndex = "1500";
+  setTimeout(() => overlay.classList.add("hidden"), 1400);
+}
+
+function triggerGameOver(state, message = "Game Over") {
+  // Clear dark fade / overlays that could mask Game Over
+  hideFallFadeOverlay();
+  const fade = document.getElementById("fallFadeOverlay");
+  if (fade) fade.remove();
+  const night = document.getElementById("nightOverlay");
+  if (night) night.style.opacity = 0;
+
+  state.gamePaused = true;
+
+  const screen = document.getElementById("gameOverScreen");
+  if (!screen) return;
+  screen.style.zIndex = "3000";
+  screen.classList.remove("hidden");
+
+  const msgEl = document.getElementById("gameOverMessage");
+  if (msgEl) msgEl.textContent = message;
+
+  // Hook buttons (idempotent)
+  const playAgain = document.getElementById("playAgainBtn");
+  if (playAgain) {
+    playAgain.onclick = () => {
+      // Soft reset via reload (keeps existing bootstrap logic)
+      window.location.reload();
+    };
+  }
+  const exit = document.getElementById("exitBtn");
+  if (exit) {
+    exit.onclick = () => {
+      // Show landing page (assumes reload for clean state)
+      window.location.href = "#landingPage";
+      window.location.reload();
+    };
+  }
+}
+
+// Existing fade helpers
 function getOrCreateFallFadeOverlay() {
   let el = document.getElementById("fallFadeOverlay");
   if (!el) {
@@ -135,4 +182,12 @@ function getOrCreateFallFadeOverlay() {
     document.body.appendChild(el);
   }
   return el;
+}
+function hideFallFadeOverlay() {
+  const fade = document.getElementById("fallFadeOverlay");
+  if (fade) {
+    fade.style.opacity = "0";
+    // remove after transition if any
+    setTimeout(() => fade.parentNode && fade.parentNode.removeChild(fade), 600);
+  }
 }

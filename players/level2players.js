@@ -34,82 +34,79 @@ export function initPlayersLevel2(scene) {
 }
 
 export function updatePlayerLevel2(state, dt = 0.016) {
-    // Summit push: a little lower jump than Level 1 for tighter feel.
-    // Height ≈ 11^2 / (2*20) = 121 / 40 ≈ 3.0 units.
+    // Alpine tighter jump: 11^2 / (2*20) ≈ 3.0 units apex
     const H_SPEED = 1.8;
-    const JUMP_SPEED = 16;   // was 5.5
-    const GRAVITY = -20;     // unchanged
-    const groundY = 20;
+    const JUMP_SPEED = 11;      // reduced from 16 (too floaty)
+    const GRAVITY = -20;
+    const START_CLAMP_X_MAX = 216; // only keep initial ground safety near spawn
     const keys = state.keys;
 
-    // Horizontal Movement
-    if (keys["ArrowLeft"]) {
-        state.c1.x -= H_SPEED * dt;
-        climber1.material.map = climber1Left;
-    } else if (keys["ArrowRight"]) {
-        state.c1.x += H_SPEED * dt;
-        climber1.material.map = climber1Right;
-    }
+    // Shared facing
+    if (keys["ArrowLeft"] || keys["KeyA"]) state.facing = "left";
+    else if (keys["ArrowRight"] || keys["KeyD"]) state.facing = "right";
 
-    if (keys["KeyA"]) {
-        state.c2.x -= H_SPEED * dt;
-        climber2.material.map = climber2Left;
-    } else if (keys["KeyD"]) {
-        state.c2.x += H_SPEED * dt;
-        climber2.material.map = climber2Right;
-    }
+    // Horizontal
+    if (keys["ArrowLeft"]) state.c1.x -= H_SPEED * dt;
+    else if (keys["ArrowRight"]) state.c1.x += H_SPEED * dt;
+    if (keys["KeyA"]) state.c2.x -= H_SPEED * dt;
+    else if (keys["KeyD"]) state.c2.x += H_SPEED * dt;
 
-    // Apply Gravity
+    // Gravity / integrate
     state.c1.vy += GRAVITY * dt;
     state.c2.vy += GRAVITY * dt;
-
-    // Apply Vertical Motion
     state.c1.y += state.c1.vy * dt;
     state.c2.y += state.c2.vy * dt;
 
-    // Collision
+    // Collision (platforms)
     const platformY1 = checkCollision(state.climber1, state.c1, state.platforms, state);
-    if (platformY1 !== null) {
-        state.c1.y = platformY1 + 0.4;
-        state.c1.vy = 0;
-        state.c1.grounded = true;
-    } else if (state.c1.y <= groundY) {
-        state.c1.y = groundY;
-        state.c1.vy = 0;
-        state.c1.grounded = true;
+    if (platformY1 !== null) { 
+        state.c1.y = platformY1 + 0.4; 
+        state.c1.vy = 0; 
+        state.c1.grounded = true; 
     } else {
-        state.c1.grounded = false;
+        // ONLY clamp to spawn ground while still near spawn (prevents initial drop-through)
+        if (state.c1.x < START_CLAMP_X_MAX && state.c1.y <= 20) {
+            state.c1.y = 20;
+            state.c1.vy = 0;
+            state.c1.grounded = true;
+        } else {
+            state.c1.grounded = false; // allow real falling into void
+        }
     }
 
     const platformY2 = checkCollision(state.climber2, state.c2, state.platforms, state);
-    if (platformY2 !== null) {
-        state.c2.y = platformY2 + 0.4;
-        state.c2.vy = 0;
-        state.c2.grounded = true;
-    } else if (state.c2.y <= groundY) {
-        state.c2.y = groundY;
-        state.c2.vy = 0;
-        state.c2.grounded = true;
+    if (platformY2 !== null) { 
+        state.c2.y = platformY2 + 0.4; 
+        state.c2.vy = 0; 
+        state.c2.grounded = true; 
     } else {
-        state.c2.grounded = false;
+        if (state.c2.x < START_CLAMP_X_MAX && state.c2.y <= 20) {
+            state.c2.y = 20;
+            state.c2.vy = 0;
+            state.c2.grounded = true;
+        } else {
+            state.c2.grounded = false;
+        }
     }
 
-    // Jumping
-    if (keys["ArrowUp"] && state.c1.grounded) {
-        state.c1.vy = JUMP_SPEED;
-        state.c1.grounded = false;
-    }
-    if (keys["KeyW"] && state.c2.grounded) {
-        state.c2.vy = JUMP_SPEED;
-        state.c2.grounded = false;
-    }
+    // Jump
+    if (keys["ArrowUp"] && state.c1.grounded) { state.c1.vy = JUMP_SPEED; state.c1.grounded = false; }
+    if (keys["KeyW"] && state.c2.grounded) { state.c2.vy = JUMP_SPEED; state.c2.grounded = false; }
 
-    // Update 3D mesh positions
-    climber1.position.x = state.c1.x;
-    climber1.position.y = state.c1.y;
+    // Mesh positions
+    climber1.position.x = state.c1.x; climber1.position.y = state.c1.y;
+    climber2.position.x = state.c2.x; climber2.position.y = state.c2.y;
 
-    climber2.position.x = state.c2.x;
-    climber2.position.y = state.c2.y;
+    // Unified facing textures
+    if (state.facing === "left") {
+        climber1.material.map = climber1Left;
+        climber2.material.map = climber2Left;
+    } else {
+        climber1.material.map = climber1Right;
+        climber2.material.map = climber2Right;
+    }
+    climber1.material.needsUpdate = true;
+    climber2.material.needsUpdate = true;
 }
 
 export function cleanupPlayersLevel2(scene) {

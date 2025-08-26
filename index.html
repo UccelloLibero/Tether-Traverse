@@ -64,7 +64,7 @@
           <p><strong>Movement:</strong> Hold left/right buttons</p>
           <p><strong>Jump:</strong> Tap jump button</p>
           <p><strong>Pause:</strong> Double tap screen</p>
-          <p><em>You control one climber, the other follows!</em></p>
+          <p><em>COMING SOON!</em></p>
         </div>
 
         <div class="control-box">
@@ -139,8 +139,8 @@
     <div><strong>Next:</strong> <span id="nextLocation">Panorama Point</span></div>
     <div><strong>Supplies:</strong>
       <ul>
-        <li>💧 <span id="waterCount">2.0</span>L</li>
-        <li>⚡️ <span id="snacksCount">10</span></li>
+        <li>💧 <span id="waterCount">2.0</span> L</li>
+        <li>🍎 <span id="snacksCount">1000</span> cal</li>
       </ul>
     </div>
     <div id="gearDisplay" class="hud-box">
@@ -156,8 +156,9 @@
   </div>
 
   <!-- Game Over Screen -->
-  <div id="gameOverScreen" class="overlay hidden">
+  <div id="gameOverScreen" class="overlay hidden" style="z-index:3000;">
     <h2>Game Over</h2>
+    <p id="gameOverMessage"></p>
     <button id="playAgainBtn">Play Again</button>
     <button id="exitBtn">Exit</button>
   </div>

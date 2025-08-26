@@ -21,9 +21,14 @@ export const sharedState = {
     isNightClimb: false,
     keys: {},
     water: 2.0,
-    snacks: 10,
+    snacks:1000,
     justResetFall: false,
     lastSafePlatform: null,   // track last safe landing spot
     skipFrame: false,         // skip heavy physics (rope) for 1 frame after reset
     fallTransitionActive: false, // smooth fall reset in progress
+    ropeDistanceLabel: null,      // DOM element for rope distance
+    lastTooCloseShown: 0,         // cooldown timestamp for hint
+    lastTooFarShown: 0,           // cooldown for "Too far..." hint
+    facing: "right", // unified facing direction for both climbers
+    level2StartTime: 0, // timestamp when level 2 began
 };

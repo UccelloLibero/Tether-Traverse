@@ -11,7 +11,7 @@ import { climber1 as climber1Level2, climber2 as climber2Level2 } from "../playe
 import { handleBreakpoints } from "../utils/breakpoints.js";
 import { updatePlayerLevel1 } from "../players/level1players.js";
 import { updatePlayerLevel2 } from "../players/level2players.js";
-import { initRope, updateRope, handleRopePhysics, getRopeDistanceSamples } from "../utils/rope.js";
+import { initRope, updateRope, handleRopePhysics, getRopeDistanceSamples, cleanupRope } from "../utils/rope.js";
 import { initMusic, toggleMusic } from "../utils/music.js";
 import { checkFall } from "../utils/fall.js";
 
@@ -24,7 +24,7 @@ let lastTime = performance.now();
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
 const pullStrength = 0.05;
-const maxRopeLength = 2.5;
+const maxRopeLength = 3; // was 2.5
 
 sharedState.reachedCampMuir = false;
 
@@ -85,6 +85,13 @@ export function startLevel2() {
 
     sharedState.c1 = { x: 214, y: 23, vy: 0, grounded: false };
     sharedState.c2 = { x: 212, y: 23, vy: 0, grounded: false };
+    // Reset fall tracking so level 2 doesn't insta-trigger game over
+    sharedState.lastSafePlatform = null;
+    sharedState.justResetFall = false;
+    sharedState.level2StartTime = performance.now();
+    // Remove any lingering fall fade overlay from level 1
+    const fade = document.getElementById("fallFadeOverlay");
+    if (fade) fade.remove();
 
     sharedState.keys = {};
     sharedState.tools = []; // Reset tools for Level 2
@@ -163,6 +170,7 @@ function animate() {
 
     handleRopePhysics(sharedState, climber1, climber2, isMobile, pullStrength, maxRopeLength, dt);
     updateRope(climber1, climber2, sharedState.camera);
+    updateRopeDistanceUI(climber1, climber2); // <— new
 
     updateCamera(sharedState.camera, climber1, climber2);
     detectGearPickup(climber1, sharedState, sharedState.scene, updateGearHUD, flashScreen);
@@ -271,20 +279,86 @@ export function resumeGame() {
     animate(); // Resume animation loop
 }
 
-// Restart the game from the beginning
+// REPLACE old restartGame (that used window.location.reload) with soft restart:
 export function restartGame() {
-    window.location.reload(); // Full reset
-}
+    // Stop current loop
+    if (animationId) cancelAnimationFrame(animationId);
 
-document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") {
-        if (sharedState.gamePaused) {
-            resumeGame();
-        } else {
-            pauseGame();
+    // Hide overlays
+    const go = document.getElementById("gameOverScreen");
+    if (go) go.classList.add("hidden");
+    const pause = document.getElementById("pauseMenu");
+    if (pause) pause.style.display = "none";
+
+    // Remove rope distance label
+    if (sharedState.ropeDistanceLabel) {
+        sharedState.ropeDistanceLabel.remove();
+        sharedState.ropeDistanceLabel = null;
+    }
+
+    // Clear scene
+    if (sharedState.scene) {
+        while (sharedState.scene.children.length) {
+            const obj = sharedState.scene.children.pop();
+            if (obj.geometry) obj.geometry.dispose?.();
+            if (obj.material) {
+                if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose?.());
+                else obj.material.dispose?.();
+            }
         }
     }
-});
+
+    // Reset state (mirror initial fresh start)
+    sharedState.currentLevel = 1;
+    sharedState.tools = [];
+    sharedState.platforms = [];
+    sharedState.c1 = { x: 0, y: 0, vy: 0, grounded: false };
+    sharedState.c2 = { x: 0, y: 0, vy: 0, grounded: false };
+    sharedState.keys = {};
+    sharedState.water = 2.0;
+    sharedState.snacks = 10;
+    sharedState.justResetFall = false;
+    sharedState.lastSafePlatform = null;
+    sharedState.skipFrame = false;
+    sharedState.fallTransitionActive = false;
+    sharedState.lastTooCloseShown = 0;
+    sharedState.facing = "right";
+    sharedState.reachedCampMuir = false;
+    sharedState.level2StartTime = 0;
+    sharedState.isNightClimb = false;
+
+    const night = document.getElementById("nightOverlay");
+    if (night) night.style.opacity = 0;
+
+    // Re-init core systems
+    initScene();
+    initHUD();
+    initLevel1(sharedState);
+    initRope(sharedState.scene, climber1Level1, climber2Level1);
+
+    sharedState.gamePaused = false;
+    lastTime = performance.now();
+    animate();
+}
+
+// Ensure buttons are bound (add this block once; avoid duplicates)
+(function bindMenuButtonsOnce() {
+    const resumeBtn = document.getElementById("resumeBtn");
+    if (resumeBtn && !resumeBtn._bound) {
+        resumeBtn._bound = true;
+        resumeBtn.addEventListener("click", resumeGame);
+    }
+    const restartBtn = document.getElementById("restartBtn");
+    if (restartBtn && !restartBtn._bound) {
+        restartBtn._bound = true;
+        restartBtn.addEventListener("click", restartGame);
+    }
+    const playAgainBtn = document.getElementById("playAgainBtn");
+    if (playAgainBtn && !playAgainBtn._bound) {
+        playAgainBtn._bound = true;
+        playAgainBtn.addEventListener("click", restartGame);
+    }
+})();
 
 // Camera
 function updateCamera(camera, climber1, climber2) {
@@ -310,14 +384,29 @@ window.addEventListener("keyup", e => {
     sharedState.keys[e.code] = false;
 });
 
-document.addEventListener("keydown", (event) => {
-    const key = event.code;
+// REMOVE old keydown listener that only handled music:
+// document.addEventListener("keydown", (event) => {
+//     const key = event.code;
+//     if (key === "KeyM") {
+//         toggleMusic();
+//     }
+// });
 
-    // Music toggle
-    if (key === "KeyM") {
-        toggleMusic();
-    }
-});
+// Unified key handler (Escape + Music) with single-bind guard
+if (!window._ttEscapeBound) {
+    window._ttEscapeBound = true;
+    document.addEventListener("keydown", (e) => {
+        if (e.code === "Escape") {
+            if (sharedState.gamePaused) {
+                resumeGame();
+            } else {
+                pauseGame();
+            }
+        } else if (e.code === "KeyM") {
+            toggleMusic();
+        }
+    });
+}
 
 document.getElementById("playAgainBtn").onclick = () => {
   document.getElementById("gameOverScreen").classList.add("hidden");
@@ -328,3 +417,71 @@ document.getElementById("exitBtn").onclick = () => {
   document.getElementById("gameOverScreen").classList.add("hidden");
   window.location.href = "#landingPage"; // Reload to show landing
 };
+
+function updateRopeDistanceUI(c1, c2) {
+    const dx = c1.position.x - c2.position.x;
+    const dy = c1.position.y - c2.position.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+
+    // Create label if needed
+    if (!sharedState.ropeDistanceLabel) {
+        const el = document.createElement("div");
+        el.className = "rope-distance-label";
+        document.body.appendChild(el);
+        sharedState.ropeDistanceLabel = el;
+    }
+
+    // Round up to one decimal place
+    const rounded = Math.ceil(dist * 10) / 10;
+    sharedState.ropeDistanceLabel.textContent = `${rounded.toFixed(1)}m`;
+
+    // Project midpoint to screen
+    const mid = new THREE.Vector3(
+        (c1.position.x + c2.position.x)/2,
+        (c1.position.y + c2.position.y)/2,
+        0
+    );
+    mid.project(sharedState.camera);
+    const sx = (mid.x + 1) * 0.5 * window.innerWidth;
+    const sy = (-mid.y + 1) * 0.5 * window.innerHeight;
+
+    sharedState.ropeDistanceLabel.style.left = `${sx}px`;
+    sharedState.ropeDistanceLabel.style.top  = `${sy}px`;
+
+    // Too close hint
+    if (dist < 1) {
+        const now = performance.now();
+        if (now - sharedState.lastTooCloseShown > 1400) {
+            sharedState.lastTooCloseShown = now;
+            const hint = document.createElement("div");
+            hint.className = "too-close-hint";
+            hint.textContent = "Too close...";
+            hint.style.left = `${sx}px`;
+            hint.style.top = `${sy}px`;
+            document.body.appendChild(hint);
+            setTimeout(() => {
+                if (hint.parentNode) hint.parentNode.removeChild(hint);
+            }, 1200);
+        }
+        sharedState.ropeDistanceLabel.style.background = "rgba(160,40,40,0.85)";
+    } else if (dist >= maxRopeLength) {
+        // New "Too far..." hint
+        const now = performance.now();
+        if (now - sharedState.lastTooFarShown > 1400) {
+            sharedState.lastTooFarShown = now;
+            const hint = document.createElement("div");
+            hint.className = "too-close-hint"; // reuse style
+            hint.textContent = "Too far...";
+            hint.style.background = "rgba(200,120,20,0.9)";
+            hint.style.left = `${sx}px`;
+            hint.style.top = `${sy}px`;
+            document.body.appendChild(hint);
+            setTimeout(() => {
+                if (hint.parentNode) hint.parentNode.removeChild(hint);
+            }, 1200);
+        }
+        sharedState.ropeDistanceLabel.style.background = "rgba(200,120,20,0.85)";
+    } else {
+        sharedState.ropeDistanceLabel.style.background = "rgba(0,0,0,0.55)";
+    }
+}
