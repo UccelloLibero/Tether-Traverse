@@ -335,10 +335,12 @@ export function restartGame() {
     initHUD();
     initLevel1(sharedState);
     initRope(sharedState.scene, climber1Level1, climber2Level1);
-
     sharedState.gamePaused = false;
     lastTime = performance.now();
     animate();
+
+    // Expose for Game Over (Level 2) reuse
+    window.restartGame = restartGame;
 }
 
 // Ensure buttons are bound (add this block once; avoid duplicates)
@@ -356,7 +358,11 @@ export function restartGame() {
     const playAgainBtn = document.getElementById("playAgainBtn");
     if (playAgainBtn && !playAgainBtn._bound) {
         playAgainBtn._bound = true;
-        playAgainBtn.addEventListener("click", restartGame);
+        playAgainBtn.addEventListener("click", () => {
+            const go = document.getElementById("gameOverScreen");
+            if (go) go.classList.add("hidden");
+            restartGame();
+        });
     }
 })();
 

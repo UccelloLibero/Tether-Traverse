@@ -151,18 +151,26 @@ function triggerGameOver(state, message = "Game Over") {
 
   // Hook buttons (idempotent)
   const playAgain = document.getElementById("playAgainBtn");
-  if (playAgain) {
+  if (playAgain && !playAgain._softBound) {
+    playAgain._softBound = true;
     playAgain.onclick = () => {
-      // Soft reset via reload (keeps existing bootstrap logic)
-      window.location.reload();
+      const screen = document.getElementById("gameOverScreen");
+      if (screen) screen.classList.add("hidden");
+      if (window.restartGame) {
+        window.restartGame();
+      } else {
+        // Fallback if restartGame not yet exposed
+        window.location.reload();
+      }
     };
   }
+
   const exit = document.getElementById("exitBtn");
-  if (exit) {
+  if (exit && !exit._exitBound) {
+    exit._exitBound = true;
     exit.onclick = () => {
-      // Show landing page (assumes reload for clean state)
       window.location.href = "#landingPage";
-      window.location.reload();
+      if (window.restartGame) window.restartGame();
     };
   }
 }

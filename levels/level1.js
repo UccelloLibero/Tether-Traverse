@@ -7,6 +7,7 @@ import { updateGearHUD, flashScreen } from "../ui/hud.js";
 import { handleBreakpoints } from "../utils/breakpoints.js";
 
 let localPlatforms = [];
+let campMuirHut = null; // track decorative hut
 
 export function initLevel1(state) {
     const scene = state.scene;
@@ -53,6 +54,108 @@ export function cleanupLevel1(state) {
         state.scene.remove(p.mesh);
     });
     localPlatforms = [];
+    // Remove decorative hut if present
+    if (campMuirHut && campMuirHut.parent) {
+        state.scene.remove(campMuirHut);
+        campMuirHut.traverse(o => {
+            if (o.geometry) o.geometry.dispose?.();
+            if (o.material) o.material.dispose?.();
+        });
+    }
+    campMuirHut = null;
+}
+
+// Decorative Camp Muir Hut (visual only)
+function createCampMuirHut(scene, x, y) {
+    const group = new THREE.Group();
+
+    // Hut facade (wavy rectangle)
+    const width = 6;
+    const height = 3;
+    const facadeGeo = new THREE.PlaneGeometry(width, height, 48, 24);
+    const pos = facadeGeo.attributes.position;
+    const halfW = width / 2;
+    const halfH = height / 2;
+
+    for (let i = 0; i < pos.count; i++) {
+        const vx = pos.getX(i);
+        const vy = pos.getY(i);
+
+        // Border factor (0 at center, 1 near any edge)
+        const edgeX = Math.pow(Math.min(1, Math.abs(vx) / halfW), 1.2);
+        const edgeY = Math.pow(Math.min(1, Math.abs(vy) / halfH), 1.2);
+        const edgeMix = Math.max(edgeX, edgeY);
+
+        if (edgeMix > 0.65) {
+            // Apply sinusoidal wobble near edges
+            const wobble =
+                Math.sin(vx * 2.2 + vy * 1.3) * 0.08 +
+                Math.cos(vy * 3.1 - vx * 0.7) * 0.06;
+            pos.setX(i, vx + (vx / halfW) * wobble * 0.4);
+            pos.setY(i, vy + (vy / halfH) * wobble * 0.4);
+        }
+    }
+    pos.needsUpdate = true;
+
+    const facadeMat = new THREE.MeshStandardMaterial({
+        color: 0xbebebe,
+        roughness: 0.85,
+        metalness: 0.05
+    });
+    const facade = new THREE.Mesh(facadeGeo, facadeMat);
+    facade.position.set(0, 0, 0);
+    group.add(facade);
+
+    // Slight thickness (simple back plane)
+    const back = facade.clone();
+    back.position.z = -0.3;
+    back.material = facadeMat.clone();
+    back.material.color.set(0x9e9e9e);
+    group.add(back);
+
+    // Roof (simple wedge)
+    const roofGeo = new THREE.ConeGeometry(width * 0.62, 1.2, 4);
+    roofGeo.rotateY(Math.PI / 4);
+    const roofMat = new THREE.MeshStandardMaterial({
+        color: 0x663300,
+        roughness: 0.9
+    });
+    const roof = new THREE.Mesh(roofGeo, roofMat);
+    roof.position.set(0, height / 2 + 0.6, -0.15);
+    group.add(roof);
+
+    // Sign (canvas texture)
+    const canvas = document.createElement("canvas");
+    canvas.width = 512;
+    canvas.height = 256;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#222";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.font = "bold 96px 'Fira Sans', sans-serif";
+    ctx.fillStyle = "#FFD700";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 4;
+    ctx.strokeText("Camp Muir", canvas.width / 2, canvas.height / 2);
+    ctx.fillText("Camp Muir", canvas.width / 2, canvas.height / 2);
+
+    const signTex = new THREE.CanvasTexture(canvas);
+    signTex.anisotropy = 4;
+    const signMat = new THREE.MeshBasicMaterial({ map: signTex, transparent: true });
+    const signGeo = new THREE.PlaneGeometry(3.6, 1.4, 1, 1);
+    const sign = new THREE.Mesh(signGeo, signMat);
+    sign.position.set(0, 0.7, 0.01);
+    group.add(sign);
+
+    // Subtle emissive glow on facade for visibility
+    facade.material.emissive = new THREE.Color(0x111111);
+    back.material.emissive = new THREE.Color(0x080808);
+
+    group.position.set(x, y, 0);
+    group.traverse(o => { o.castShadow = false; o.receiveShadow = true; });
+    scene.add(group);
+    return group; // return so caller can store reference
 }
 
 export function loadLevel1(scene, platforms) {
@@ -97,8 +200,11 @@ export function loadLevel1(scene, platforms) {
     createPlatform(scene, platforms, 190, 20.5); // Snack resupply for Summit day
     createPlatform(scene, platforms, 196, 21);
     createPlatform(scene, platforms, 202, 22);
-    createPlatform(scene, platforms, 208, 22);
-    createPlatform(scene, platforms, 214, 23); // Last platform at Camp Muir
+    createPlatform(scene, platforms, 208, 22, 2.5, 0.5);
+    createPlatform(scene, platforms, 214, 23, 2.5, 0.5); // Last platform at Camp Muir
     createPlatform(scene, platforms, 214, 23, 10, 0.5); // Longer platform for Camp Muir
+
+    // Decorative hut just beyond Camp Muir
+    campMuirHut = createCampMuirHut(scene, 222, 24.5);
 }
 
