@@ -466,6 +466,7 @@ body {
       padding: 0.5rem 1rem;
       margin: 0.5rem;
       font-size: 1.2rem;
+      width: 100px;
       background: #FFD700;
       color: #000;
       border: none;
@@ -477,6 +478,7 @@ body {
       padding: 0.5rem 1rem;
       margin: 0.5rem;
       font-size: 1.2rem;
+      width: 100px;
       background: #FF4500;
       color: #fff;
       border: none;
@@ -489,4 +491,8 @@ body {
       color: #FFFFFF;
       font-size: 0.9rem;
       text-transform: uppercase;
+    }
+
+    .maya-portfolio-link:hover {
+      color: #9BC13B;
     }

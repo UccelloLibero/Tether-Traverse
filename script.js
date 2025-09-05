@@ -1,4 +1,3 @@
-
 import { handlePlayerMovement, addGroundedMotion, initPlayers } from './players.js';
 import { climber1, climber2} from './players.js';
 import { loadLevel1 } from './levels/level1.js';
@@ -676,6 +675,16 @@ function startLevel2() {
   currentLevel = 2;
   clearPlatforms(); // Remove level 1 platforms
   loadLevel2();
+
+  // Reset supplies for Level 2 and update UI
+  state.water = 2.0;
+  state.snacks = 1000;
+  const wc = document.getElementById("waterCount");
+  if (wc) wc.textContent = state.water.toFixed(1);
+  const sc = document.getElementById("snacksCount");
+  if (sc) sc.textContent = state.snacks;
+  const camp = document.getElementById("campSupplies");
+  if (camp) camp.textContent = `💧 ${state.water.toFixed(1)} | 🍎 ${state.snacks}`;
 }
 
 // Helper function for lighting during night climb

@@ -157,10 +157,14 @@
 
   <!-- Game Over Screen -->
   <div id="gameOverScreen" class="overlay hidden" style="z-index:3000;">
-    <h2>Game Over</h2>
-    <p id="gameOverMessage"></p>
-    <button id="playAgainBtn">Play Again</button>
-    <button id="exitBtn">Exit</button>
+    <div class="pause-content gameover-content">
+      <h2>Game Over</h2>
+      <p id="gameOverMessage"></p>
+      <div class="gameover-actions">
+        <button id="playAgainBtn" class="pause-btn">Play Again</button>
+        <button id="exitBtn" class="pause-btn">Exit</button>
+      </div>
+    </div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>

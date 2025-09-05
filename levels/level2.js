@@ -41,6 +41,16 @@ export function initLevel2(state) {
     // Safety: remove any leftover Level 1 decorative hut if still attached
     const strayHut = scene.getObjectByName("CampMuirHut"); // only if we decide to name it later
     if (strayHut && strayHut.parent) scene.remove(strayHut);
+
+    // Ensure HUD shows refreshed supplies (defensive)
+    const wc = document.getElementById("waterCount");
+    if (wc && typeof state.water !== "undefined") wc.textContent = state.water.toFixed(1);
+    const sc = document.getElementById("snacksCount");
+    if (sc && typeof state.snacks !== "undefined") sc.textContent = state.snacks;
+    const camp = document.getElementById("campSupplies");
+    if (camp && typeof state.water !== "undefined" && typeof state.snacks !== "undefined") {
+        camp.textContent = `💧 ${state.water.toFixed(1)} | 🍎 ${state.snacks}`;
+    }
 }
 
 export function updateLevel2(state, climber1, dt) {

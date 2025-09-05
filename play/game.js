@@ -96,8 +96,17 @@ export function startLevel2() {
     sharedState.keys = {};
     sharedState.tools = []; // Reset tools for Level 2
 
+    // Reset supplies for Level 2
     sharedState.water = 2.0; // Reset water for Level 2
-    sharedState.snacks = 10; // Reset snacks for Level 2
+    sharedState.snacks = 1000; // Reset snacks for Level 2
+
+    // Update HUD (defensive DOM checks)
+    const wc = document.getElementById("waterCount");
+    if (wc) wc.textContent = sharedState.water.toFixed(1);
+    const sc = document.getElementById("snacksCount");
+    if (sc) sc.textContent = sharedState.snacks;
+    const camp = document.getElementById("campSupplies");
+    if (camp) camp.textContent = `💧 ${sharedState.water.toFixed(1)} | 🍎 ${sharedState.snacks}`;
 
     // fadeToLevel2Background("assets/mount-rainier-level2.jpg"); // Fade in new background
 
@@ -420,8 +429,11 @@ document.getElementById("playAgainBtn").onclick = () => {
 };
 
 document.getElementById("exitBtn").onclick = () => {
-  document.getElementById("gameOverScreen").classList.add("hidden");
-  window.location.href = "#landingPage"; // Reload to show landing
+  const go = document.getElementById("gameOverScreen");
+  if (go) go.classList.add("hidden");
+  // Use unified exit handler
+  if (window.exitToLanding) window.exitToLanding();
+  else window.location.href = "#landingPage";
 };
 
 function updateRopeDistanceUI(c1, c2) {
@@ -491,3 +503,33 @@ function updateRopeDistanceUI(c1, c2) {
         sharedState.ropeDistanceLabel.style.background = "rgba(0,0,0,0.55)";
     }
 }
+
+// Expose a unified "exit to instructions" routine so all modules can reuse it.
+// Stops the game, hides HUD/overlays and shows the landing/instructions.
+export function exitToLanding() {
+    // Ensure game loop is stopped and scene cleared
+    stopGame();
+
+    // Hide overlays and game UI
+    const go = document.getElementById("gameOverScreen");
+    if (go) go.classList.add("hidden");
+    const pause = document.getElementById("pauseMenu");
+    if (pause) pause.style.display = "none";
+    const overlay = document.getElementById("overlay");
+    if (overlay) overlay.classList.add("hidden");
+
+    // Show landing page and hide HUD
+    const landing = document.getElementById("landingPage");
+    if (landing) {
+        // restore the original centered layout (landing uses flex in CSS)
+        landing.style.display = "flex";
+        landing.style.zIndex = "1000";
+    }
+    const hud = document.getElementById("hud");
+    if (hud) hud.classList.add("hidden");
+
+    // Reset hash for sensible browser state
+    try { window.location.hash = "#landingPage"; } catch (e) { /* noop */ }
+}
+// make callable globally for modules that don't import this file
+window.exitToLanding = exitToLanding;

@@ -169,8 +169,14 @@ function triggerGameOver(state, message = "Game Over") {
   if (exit && !exit._exitBound) {
     exit._exitBound = true;
     exit.onclick = () => {
-      window.location.href = "#landingPage";
-      if (window.restartGame) window.restartGame();
+      // Prefer the central exit handler if available
+      if (window.exitToLanding) {
+        window.exitToLanding();
+      } else {
+        // fallback: show landing/hash + attempt soft restart if available
+        window.location.href = "#landingPage";
+        if (window.restartGame) window.restartGame();
+      }
     };
   }
 }
