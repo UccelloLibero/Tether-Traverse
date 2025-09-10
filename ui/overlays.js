@@ -29,7 +29,7 @@ export function startSummitCelebration(percent = 0) {
   // Message
   const msg = document.createElement("div");
   msg.className = "celebration-message";
-  msg.textContent = `Congratulations! You've reached the summit of Mount Rainier! Rope safety: ${percent}%`;
+  msg.textContent = `Congratulations! You've reached the summit of Mount Rainier! Rope safety: ${percent}% Thank you for playing Tether Traverse!`;
   summitDiv.appendChild(msg);
 
   // Generate snowflakes
@@ -54,3 +54,6 @@ export function startSummitCelebration(percent = 0) {
     summitDiv.classList.add("hidden");
   }, 9000);
 }
+
+// Make the celebration available globally for fallback usage
+if (typeof window !== "undefined") window.startSummitCelebration = startSummitCelebration;

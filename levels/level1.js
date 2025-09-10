@@ -13,7 +13,7 @@ export function initLevel1(state) {
     const scene = state.scene;
     const loader = new THREE.TextureLoader();
 
-    loader.load("assets/mount-rainier.png", texture => {
+    loader.load("assets/MountRainier.jpg", texture => {
         scene.background = texture;
     });
 
@@ -117,7 +117,7 @@ function createCampMuirHut(scene, x, y) {
     const roofGeo = new THREE.ConeGeometry(width * 0.62, 1.2, 4);
     roofGeo.rotateY(Math.PI / 4);
     const roofMat = new THREE.MeshStandardMaterial({
-        color: 0x663300,
+        color: 0x453a3c,
         roughness: 0.9
     });
     const roof = new THREE.Mesh(roofGeo, roofMat);
@@ -129,13 +129,13 @@ function createCampMuirHut(scene, x, y) {
     canvas.width = 512;
     canvas.height = 256;
     const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#222";
+    ctx.fillStyle = "#7c7b7bff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.font = "bold 96px 'Fira Sans', sans-serif";
-    ctx.fillStyle = "#FFD700";
+    ctx.fillStyle = "#FF6426";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.strokeStyle = "#fff";
+    ctx.strokeStyle = "#FBFCFF";
     ctx.lineWidth = 4;
     ctx.strokeText("Camp Muir", canvas.width / 2, canvas.height / 2);
     ctx.fillText("Camp Muir", canvas.width / 2, canvas.height / 2);

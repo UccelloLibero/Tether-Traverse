@@ -166,7 +166,7 @@ function createCampMuirHutL2(scene, x, y) {
 
     const roofGeo = new THREE.ConeGeometry(width * 0.62, 1.15, 4);
     roofGeo.rotateY(Math.PI / 4);
-    const roofMat = new THREE.MeshStandardMaterial({ color: 0x5b371b, roughness: 0.85 });
+    const roofMat = new THREE.MeshStandardMaterial({ color: 0x453a3c, roughness: 0.85 });
     const roof = new THREE.Mesh(roofGeo, roofMat);
     roof.position.set(0, height / 2 + 0.55, -0.12);
     group.add(roof);
@@ -175,12 +175,12 @@ function createCampMuirHutL2(scene, x, y) {
     const canvas = document.createElement("canvas");
     canvas.width = 512; canvas.height = 256;
     const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#1b1b1b";
+    ctx.fillStyle = "#7c7b7bff";
     ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.font = "bold 100px 'Fira Sans', sans-serif";
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 5;
-    ctx.fillStyle = "#FFD35A";
+    ctx.strokeStyle = "#FBFCFF"; ctx.lineWidth = 5;
+    ctx.fillStyle = "#FF6426";
     ctx.strokeText("Camp Muir", canvas.width/2, canvas.height/2);
     ctx.fillText("Camp Muir", canvas.width/2, canvas.height/2);
     const signTex = new THREE.CanvasTexture(canvas);

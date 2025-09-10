@@ -2,7 +2,6 @@ import { fadeOutAndPause } from "../play/game.js";
 import { updateHUDStats } from "../ui/hud.js";
 import { startLevel2 } from "../play/game.js";
 import { triggerOverlay } from "../ui/overlays.js";
-import { startSummitCelebration } from "../ui/overlays.js";
 import { getRopeDistanceSamples, maxRopeLength } from "./rope.js";
 
 export const breakpoints = [
@@ -11,10 +10,10 @@ export const breakpoints = [
   { x: 82, name: "Pebble Creek", elevation: 7200, waterUse: 0.5, snackUse: 200, message: "Rest stop before snowfields." },
   { x: 142, name: "Muir Snowfield", elevation: 8500, waterUse: 0.5, snackUse: 200, message: "Snow trek begins!" },
 //   { x: 214, name: "Camp Muir", elevation: 10080, waterUse: 0.5, snackUse: 2, message: "Camp Muir reached. Prepare for night!", isCamp: true },
-  { x: 229, name: "Cathedral Gap", elevation: 11000, waterUse: 0.25, snackUse: 100, night: true, message: "Cross Cathedral Gap." },
-  { x: 304, name: "Ingraham Flats", elevation: 11500, waterUse: 0.25, snackUse: 100, night: true, message: "Over Ingraham Glacier!" },
-  { x: 376, name: "Disappointment Cleaver", elevation: 12300, waterUse: 0.25, snackUse: 1, night: true, message: "The Cleaver awaits!" },
-  { x: 418, name: "High Break", elevation: 13500, waterUse: 0.25, snackUse: 100, night: true, message: "Final break. Dawn ahead!" },
+  { x: 229, name: "Cathedral Gap", elevation: 11000, waterUse: 0.5, snackUse: 200, night: true, message: "Cross Cathedral Gap." },
+  { x: 304, name: "Ingraham Flats", elevation: 11500, waterUse: 0.5, snackUse: 200, night: true, message: "Over Ingraham Glacier!" },
+  { x: 376, name: "Disappointment Cleaver", elevation: 12300, waterUse: 0.5, snackUse: 200, night: true, message: "The Cleaver awaits!" },
+  { x: 418, name: "High Break", elevation: 13500, waterUse: 0.5, snackUse: 200, night: true, message: "Final break. And final push to the summit!" },
   { x: 460, name: "Columbia Crest", elevation: 14410, waterUse: 0, snackUse: 0, night: true, message: "SUMMIT! You made it!" }
 ];
 
@@ -48,13 +47,34 @@ export function handleBreakpoints(climber1, state) {
         const total = ropeSamples.length;
         const percent = total ? Math.round((withinRange / total) * 100) : 0;
 
-        // Show overlay with continue; also auto-start celebration after short delay
+        // Show overlay with Continue; on continue, start the cinematic + celebration sequence
         triggerOverlay("Summit Reached!", `${bp.message}\nRope safety: ${percent}%`, () => {
-          startSummitCelebration(percent);
+          if (window.startSummitSequence) {
+            window.startSummitSequence(percent);
+          } else if (window.startSummitCelebration) {
+            // fallback
+            window.startSummitCelebration(percent);
+            setTimeout(() => {
+              if (window.exitToLanding) window.exitToLanding();
+              else window.location.href = "#landingPage";
+            }, 20000);
+          } else {
+            // last-resort auto-exit after 20s
+            setTimeout(() => {
+              if (window.exitToLanding) window.exitToLanding();
+              else window.location.href = "#landingPage";
+            }, 20000);
+          }
         });
 
         // Auto trigger if player doesn't press Continue in 4s
-        setTimeout(() => startSummitCelebration(percent), 4000);
+        setTimeout(() => {
+          if (!window.startSummitSequence && window.startSummitCelebration) {
+            window.startSummitCelebration(percent);
+          } else if (window.startSummitSequence) {
+            window.startSummitSequence(percent);
+          }
+        }, 4000);
         continue;
       }
 

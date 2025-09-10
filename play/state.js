@@ -21,7 +21,7 @@ export const sharedState = {
     isNightClimb: false,
     keys: {},
     water: 2.0,
-    snacks:1000,
+    snacks: Math.floor(1000),
     justResetFall: false,
     lastSafePlatform: null,   // track last safe landing spot
     skipFrame: false,         // skip heavy physics (rope) for 1 frame after reset

@@ -98,7 +98,7 @@ export function startLevel2() {
 
     // Reset supplies for Level 2
     sharedState.water = 2.0; // Reset water for Level 2
-    sharedState.snacks = 1000; // Reset snacks for Level 2
+    sharedState.snacks = Math.floor(1000); // Reset snacks for Level 2
 
     // Update HUD (defensive DOM checks)
     const wc = document.getElementById("waterCount");
@@ -325,7 +325,7 @@ export function restartGame() {
     sharedState.c2 = { x: 0, y: 0, vy: 0, grounded: false };
     sharedState.keys = {};
     sharedState.water = 2.0;
-    sharedState.snacks = 10;
+    sharedState.snacks = Math.floor(1000);
     sharedState.justResetFall = false;
     sharedState.lastSafePlatform = null;
     sharedState.skipFrame = false;
@@ -533,3 +533,94 @@ export function exitToLanding() {
 }
 // make callable globally for modules that don't import this file
 window.exitToLanding = exitToLanding;
+
+// New: orchestrate summit sequence (background swap, camera zoom, rope result, celebration, auto-exit)
+export function startSummitSequence(percent = 0) {
+    const state = sharedState;
+    if (!state || !state.scene || !state.camera || !state.renderer) {
+        // fallback: directly show celebration then exit in 10s
+        if (window.startSummitCelebration) window.startSummitCelebration(percent);
+        setTimeout(() => { if (window.exitToLanding) window.exitToLanding(); else window.location.href = "#landingPage"; }, 10000);
+        return;
+    }
+
+    // Pause game physics but we'll render manually during the cinematic
+    state.gamePaused = true;
+
+    // Load summit background for level 2 (defensive)
+    const loader = new THREE.TextureLoader();
+    loader.load("assets/mount-rainier-summit.jpg", tex => {
+        state.scene.background = tex;
+    });
+
+    // Determine camera & target
+    const camera = state.camera;
+    const renderer = state.renderer;
+
+    // Use climber meshes for centering if available
+    const c1 = state.climber1 || null;
+    const c2 = state.climber2 || null;
+    let targetX = camera.position.x;
+    let targetY = camera.position.y;
+    if (c1 && c2 && c1.position && c2.position) {
+        targetX = (c1.position.x + c2.position.x) / 2;
+        targetY = (c1.position.y + c2.position.y) / 2 + 1.2; // slight above players
+    }
+
+    // Animate camera position and zoom over 2s
+    const start = performance.now();
+    const duration = 2000;
+    const startX = camera.position.x;
+    const startY = camera.position.y;
+    const startZoom = camera.zoom || 1;
+    const targetZoom = Math.max(1.5, startZoom * 1.8); // zoom in ~1.5-1.8x
+    function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+    function step(now) {
+        const t = Math.min(1, (now - start) / duration);
+        const e = easeOut(t);
+        camera.position.x = startX + (targetX - startX) * e;
+        camera.position.y = startY + (targetY - startY) * e;
+        camera.zoom = startZoom + (targetZoom - startZoom) * e;
+        camera.updateProjectionMatrix();
+
+        renderer.clear();
+        renderer.render(state.scene, camera);
+
+        if (t < 1) {
+            requestAnimationFrame(step);
+        } else {
+            // After zoom completes, display rope success overlay then start celebration
+            // const overlay = document.getElementById("overlay");
+            // if (overlay) {
+            //     const titleEl = document.getElementById("levelTitle");
+            //     const textEl = document.getElementById("levelText");
+            //     if (titleEl) titleEl.textContent = "Rope Management";
+            //     if (textEl) textEl.textContent = `Rope safety: ${percent}% — Well done!`;
+            //     overlay.classList.remove("hidden");
+            //     // hide continue button for cinematic
+            //     const cont = document.getElementById("continueBtn");
+            //     if (cont) cont.classList.add("hidden");
+            // }
+
+            // Slight delay then show snowflakes (reuse overlays implementation if available)
+            setTimeout(() => {
+                if (window.startSummitCelebration) window.startSummitCelebration(percent);
+                // hide overlay after a short moment so celebration shows unobstructed
+                setTimeout(() => {
+                    const overlay2 = document.getElementById("overlay");
+                    if (overlay2) overlay2.classList.add("hidden");
+                }, 1200);
+            }, 800);
+
+            // After ~10s total, return to landing page
+            setTimeout(() => {
+                if (window.exitToLanding) window.exitToLanding();
+                else window.location.href = "#landingPage";
+            }, 10000);
+        }
+    }
+    requestAnimationFrame(step);
+}
+// expose globally so breakpoints / overlays can call it
+window.startSummitSequence = startSummitSequence;
