@@ -1,5 +1,7 @@
 # Tether Traverse
 
+![Tether Travese game component highlights](tether-traverse.png)
+
 *Navigate the slopes of Mount Rainier with you climbing partner!*\
 A cooperative platformer built for browser and mobile that simulates the iconic glacier ascent to the 14,410 ft summit of Mount Rainier. 
 
