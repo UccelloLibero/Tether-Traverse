@@ -25,7 +25,7 @@ A cooperative platformer built for browser and mobile that simulates the iconic 
 
 ## Built With
 - [Three.js](https://threejs.org/) - 2D/3D rendering
-- JavaScript (Vanilla)
+- JavaScript
 - HTML5/CSS3
 - Fully responsive: Playable in desktop and mobile browsers
 
@@ -38,4 +38,4 @@ This means:
 More info: [creativecommons.org/licenses/by-nc/4.0](https://creativecommons.org/licenses/by-nc/4.0/)
 
 ## Play Online
-Tether Travese will avalible to play directly in your browser (desktop or mobile) very soon!
+While some game components are still under construction, you can play in [browser](https://tether-traverse-9fc67c5fbd8e.herokuapp.com/). Mobile coming soon!
