@@ -536,6 +536,10 @@ window.exitToLanding = exitToLanding;
 
 // New: orchestrate summit sequence (background swap, camera zoom, rope result, celebration, auto-exit)
 export function startSummitSequence(percent = 0) {
+    // guard so cinematic runs once
+    if (startSummitSequence._done) return;
+    startSummitSequence._done = true;
+
     const state = sharedState;
     if (!state || !state.scene || !state.camera || !state.renderer) {
         // fallback: directly show celebration then exit in 10s
@@ -622,5 +626,4 @@ export function startSummitSequence(percent = 0) {
     }
     requestAnimationFrame(step);
 }
-// expose globally so breakpoints / overlays can call it
 window.startSummitSequence = startSummitSequence;

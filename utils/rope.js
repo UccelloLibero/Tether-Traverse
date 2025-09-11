@@ -1,7 +1,22 @@
 let ropeMesh;
+// ring buffer of recent distance samples (numbers)
 let ropeDistanceSamples = [];
+const MAX_SAMPLES = 300;
+let lastSampleTime = 0;
+const SAMPLE_INTERVAL_MS = 200; // ~5Hz sampling
 
-export const maxRopeLength = 3; // Maximum length of the rope
+// thresholds (can be tuned)
+export const MIN_SAFE_DISTANCE = 1.0; // < this => "too close"
+export const maxRopeLength = 3; // Maximum length of the rope (exported)
+// Note: maxRopeLength also exported below for backward compatibility (kept name)
+
+// internal helper to push sample into ring buffer
+function pushSample(dist) {
+  if (ropeDistanceSamples.length >= MAX_SAMPLES) {
+    ropeDistanceSamples.shift();
+  }
+  ropeDistanceSamples.push(dist);
+}
 
 export function initRope(scene, climber1, climber2) {
   const ropePath = new THREE.CatmullRomCurve3([
@@ -32,35 +47,66 @@ export function updateRope(climber1, climber2, camera) {
   ropeMesh.geometry = new THREE.TubeGeometry(newCurve, 20, 0.01, 8, false);
 }
 
-export function handleRopePhysics(state, climber1, climber2, isMobile, pullStrength, maxRopeLength, dt = 0.016) {
+export function handleRopePhysics(state, climber1, climber2, isMobile, pullStrength, maxRopeLen = maxRopeLength, dt = 0.016) {
   const dx = climber1.position.x - climber2.position.x;
   const dy = climber1.position.y - climber2.position.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
 
+  // prevent climber overlap
   if (state.c2.x > state.c1.x - 0.2) {
     state.c2.x = state.c1.x - 0.2;
   }
 
-  if (dist > maxRopeLength) {
-    const excess = dist - maxRopeLength;
+  // If rope over-extended, apply symmetric soft correction toward midpoint
+  if (dist > maxRopeLen) {
+    const excess = dist - maxRopeLen;
     const nx = dx / dist;
     const ny = dy / dist;
-    const correction = excess * 0.5; // split correction
+    const correction = excess * 0.5;
 
-    // Apply soft correction scaled by dt for smoothness
-    state.c1.x -= nx * correction * (8 * dt);
-    state.c2.x += nx * correction * (8 * dt);
-    climber1.position.y -= ny * correction * (8 * dt);
-    climber2.position.y += ny * correction * (8 * dt);
+    // apply a smoother correction scaled by dt
+    const factor = 6 * dt; // tuning constant
+    state.c1.x -= nx * correction * factor;
+    state.c2.x += nx * correction * factor;
+    climber1.position.y -= ny * correction * factor;
+    climber2.position.y += ny * correction * factor;
+  } else if (dist < 0.6) {
+    // if extremely close, gently push them apart a bit to reduce collision jitter
+    const push = (0.6 - dist) * 0.25 * dt;
+    state.c1.x -= (dx / dist || 0) * push;
+    state.c2.x += (dx / dist || 0) * push;
   }
 
-  if (Math.random() < 0.1) {
-    ropeDistanceSamples.push(dist);
+  // Periodic sampling (keeps recent history) for safety stats
+  const now = performance.now();
+  if (now - lastSampleTime >= SAMPLE_INTERVAL_MS) {
+    lastSampleTime = now;
+    pushSample(dist);
   }
 }
 
+// Return raw distances (copy)
 export function getRopeDistanceSamples() {
-  return ropeDistanceSamples;
+  return ropeDistanceSamples.slice();
+}
+
+// Return summary stats: counts of safe / too close / too far and total
+export function getRopeStats() {
+  const stats = { total: 0, safe: 0, tooClose: 0, tooFar: 0 };
+  for (const d of ropeDistanceSamples) {
+    stats.total++;
+    if (d < MIN_SAFE_DISTANCE) stats.tooClose++;
+    else if (d > maxRopeLength) stats.tooFar++;
+    else stats.safe++;
+  }
+  return stats;
+}
+
+// Safe percentage: proportion of samples that are within [MIN_SAFE_DISTANCE, maxRopeLength]
+export function getRopeSafetyPercent() {
+  const s = getRopeStats();
+  if (s.total === 0) return 0;
+  return Math.round((s.safe / s.total) * 100);
 }
 
 export function cleanupRope(scene) {
@@ -72,4 +118,5 @@ export function cleanupRope(scene) {
     }
 
     ropeDistanceSamples = []; // Clean any collected data for level 2
+    lastSampleTime = 0;
 }

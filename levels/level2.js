@@ -175,12 +175,12 @@ function createCampMuirHutL2(scene, x, y) {
     const canvas = document.createElement("canvas");
     canvas.width = 512; canvas.height = 256;
     const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#7c7b7bff";
+    ctx.fillStyle = "#FF6426";
     ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.font = "bold 100px 'Fira Sans', sans-serif";
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.strokeStyle = "#FBFCFF"; ctx.lineWidth = 5;
-    ctx.fillStyle = "#FF6426";
+    ctx.fillStyle = "#FBFCFF";
     ctx.strokeText("Camp Muir", canvas.width/2, canvas.height/2);
     ctx.fillText("Camp Muir", canvas.width/2, canvas.height/2);
     const signTex = new THREE.CanvasTexture(canvas);

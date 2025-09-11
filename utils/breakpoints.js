@@ -2,7 +2,7 @@ import { fadeOutAndPause } from "../play/game.js";
 import { updateHUDStats } from "../ui/hud.js";
 import { startLevel2 } from "../play/game.js";
 import { triggerOverlay } from "../ui/overlays.js";
-import { getRopeDistanceSamples, maxRopeLength } from "./rope.js";
+import { getRopeSafetyPercent, getRopeStats, maxRopeLength } from "./rope.js";
 
 export const breakpoints = [
     { x: 0, name: "Paradise Trailhead", elevation: 5400, waterUse: 0, snackUse: 0 },
@@ -42,39 +42,27 @@ export function handleBreakpoints(climber1, state) {
       }
 
       if (bp.name === "Columbia Crest") {
-        const ropeSamples = getRopeDistanceSamples();
-        const withinRange = ropeSamples.filter(d => d <= maxRopeLength).length;
-        const total = ropeSamples.length;
-        const percent = total ? Math.round((withinRange / total) * 100) : 0;
-
-        // Show overlay with Continue; on continue, start the cinematic + celebration sequence
-        triggerOverlay("Summit Reached!", `${bp.message}\nRope safety: ${percent}%`, () => {
+        // Only trigger the summit cinematic when we're on Level 2 (so it runs at x=460 on L2)
+        if (state && state.currentLevel === 2) {
+          const percent = getRopeSafetyPercent();
+          // Directly start the cinematic + celebration (startSummitSequence handles camera + celebration)
           if (window.startSummitSequence) {
             window.startSummitSequence(percent);
           } else if (window.startSummitCelebration) {
-            // fallback
+            // defensive fallback: DOM-only celebration then exit
             window.startSummitCelebration(percent);
             setTimeout(() => {
               if (window.exitToLanding) window.exitToLanding();
               else window.location.href = "#landingPage";
-            }, 20000);
+            }, 15000);
           } else {
-            // last-resort auto-exit after 20s
+            // last-resort auto-exit after 15s
             setTimeout(() => {
               if (window.exitToLanding) window.exitToLanding();
               else window.location.href = "#landingPage";
-            }, 20000);
+            }, 15000);
           }
-        });
-
-        // Auto trigger if player doesn't press Continue in 4s
-        setTimeout(() => {
-          if (!window.startSummitSequence && window.startSummitCelebration) {
-            window.startSummitCelebration(percent);
-          } else if (window.startSummitSequence) {
-            window.startSummitSequence(percent);
-          }
-        }, 4000);
+        }
         continue;
       }
 
