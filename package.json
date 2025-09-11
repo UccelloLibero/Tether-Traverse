@@ -1,0 +1,16 @@
+{
+  "name": "tether-traverse",
+  "version": "1.0.0",
+  "description": "Tether Traverse - static browser game served via Express for Heroku",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": "16.x || 18.x"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "license": "MIT"
+}
