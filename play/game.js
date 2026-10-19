@@ -8,12 +8,14 @@ import { initLevel2, updateLevel2, cleanupLevel2 } from "../levels/level2.js";
 import { createLevel2Lights, updateHeadLampLighting } from "../players/level2players.js";
 import { cleanupPlayersLevel1, climber1 as climber1Level1, climber2 as climber2Level1 } from "../players/level1players.js";
 import { climber1 as climber1Level2, climber2 as climber2Level2 } from "../players/level2players.js";
-import { handleBreakpoints } from "../utils/breakpoints.js";
+import { handleBreakpoints, resetBreakpoints, reachedCheckpoint } from "../utils/breakpoints.js";
 import { updatePlayerLevel1 } from "../players/level1players.js";
 import { updatePlayerLevel2 } from "../players/level2players.js";
 import { initRope, updateRope, handleRopePhysics, getRopeDistanceSamples, cleanupRope } from "../utils/rope.js";
 import { initMusic, toggleMusic } from "../utils/music.js";
+import { startSummitCelebration } from "../ui/overlays.js";
 import { checkFall } from "../utils/fall.js";
+import { initMobileControls, showMobileControls, releaseMobileKeys, isTouchDevice } from "../ui/mobileControls.js";
 
 
 
@@ -21,7 +23,7 @@ let animationId;
 let lastTime = performance.now();
 
 // Detect mobile
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+const isMobile = isTouchDevice;
 
 const pullStrength = 0.05;
 const maxRopeLength = 3; // was 2.5
@@ -31,6 +33,7 @@ sharedState.reachedCampMuir = false;
 
 // Game entry point
 export function startGame() {
+    resetGameState();
     initScene();
     initMusic(sharedState.camera); // Initialize background music
     initHUD();
@@ -52,11 +55,7 @@ function initScene() {
     const ambientLight = new THREE.AmbientLight(0x404040, 1.2); 
     sharedState.scene.add(ambientLight);
 
-    sharedState.camera = new THREE.OrthographicCamera(
-        window.innerWidth / -100, window.innerWidth / 100,
-        window.innerHeight / 100, window.innerHeight / -100,
-        0.1, 1000
-    );
+    sharedState.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
     sharedState.camera.position.z = 10;
 
     sharedState.renderer = new THREE.WebGLRenderer({ 
@@ -64,17 +63,30 @@ function initScene() {
         antialias: true
      });
 
-    sharedState.renderer.setSize(window.innerWidth, window.innerHeight);
+    sharedState.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    fitViewport();
 
+    if (!window._ttResizeBound) {
+        window._ttResizeBound = true;
+        window.addEventListener("resize", fitViewport);
+        window.addEventListener("orientationchange", () => setTimeout(fitViewport, 200));
+    }
+}
 
-    window.addEventListener("resize", () => {
-        sharedState.camera.left = window.innerWidth / -100;
-        sharedState.camera.right = window.innerWidth / 100;
-        sharedState.camera.top = window.innerHeight / 100;
-        sharedState.camera.bottom = window.innerHeight / -100;
-        sharedState.camera.updateProjectionMatrix();
-        sharedState.renderer.setSize(window.innerWidth, window.innerHeight);
-    }); 
+// Desktop shows 50px per world unit. Small screens (phones) zoom out so at least
+// ~18 x 9 world units stay visible and upcoming platforms aren't off-screen.
+function fitViewport() {
+    const { camera, renderer } = sharedState;
+    if (!camera || !renderer) return;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const pxPerUnit = Math.min(50, w / 18, h / 9);
+    camera.left = -w / (2 * pxPerUnit);
+    camera.right = w / (2 * pxPerUnit);
+    camera.top = h / (2 * pxPerUnit);
+    camera.bottom = -h / (2 * pxPerUnit);
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
 }
 
 
@@ -122,9 +134,17 @@ export function startLevel2() {
 
     updateHeadLampLighting(climber1Level2, climber2Level2, sharedState.isNightClimb, climber1Level2.position.x);
 
-    animate(); // resume the loop now
+    startLoop(); // resume the loop now
 }
 
+
+// (Re)start the loop without stacking a second requestAnimationFrame chain.
+// The loop keeps ticking while paused, so calling animate() directly would double it.
+function startLoop() {
+    if (animationId) cancelAnimationFrame(animationId);
+    lastTime = performance.now();
+    animate();
+}
 
 // Main animation loop
 function animate() {
@@ -167,7 +187,7 @@ function animate() {
     }
 
     // Check for Camp Muir platform (x = 214) trigger
-    if (sharedState.currentLevel === 1 && climber1.position.x >= 214 && !sharedState.reachedCampMuir) {
+    if (sharedState.currentLevel === 1 && reachedCheckpoint(climber1, sharedState, 214) && !sharedState.reachedCampMuir) {
         sharedState.reachedCampMuir = true;
         sharedState.gamePaused = true;
         showCampMuirOverlay();
@@ -278,6 +298,7 @@ export function stopGame() {
 // Pause the game and show pause menu
 export function pauseGame() {
     sharedState.gamePaused = true;
+    releaseMobileKeys();
     document.getElementById("pauseMenu").style.display = "flex";
 }
 
@@ -285,7 +306,7 @@ export function pauseGame() {
 export function resumeGame() {
     sharedState.gamePaused = false;
     document.getElementById("pauseMenu").style.display = "none";
-    animate(); // Resume animation loop
+    startLoop(); // Resume animation loop
 }
 
 // REPLACE old restartGame (that used window.location.reload) with soft restart:
@@ -317,7 +338,23 @@ export function restartGame() {
         }
     }
 
-    // Reset state (mirror initial fresh start)
+    resetGameState();
+
+    // Re-init core systems
+    initScene();
+    initHUD();
+    initLevel1(sharedState);
+    initRope(sharedState.scene, climber1Level1, climber2Level1);
+    sharedState.gamePaused = false;
+    lastTime = performance.now();
+    animate();
+}
+// Expose for Game Over (Level 2) reuse
+window.restartGame = restartGame;
+
+// Reset everything a run can change, so a new game (Play Again, or Exit then
+// Start) never inherits a stuck death flag, Camp Muir flag, or used checkpoints.
+function resetGameState() {
     sharedState.currentLevel = 1;
     sharedState.tools = [];
     sharedState.platforms = [];
@@ -336,20 +373,27 @@ export function restartGame() {
     sharedState.level2StartTime = 0;
     sharedState.isNightClimb = false;
 
+    sharedState.lastTooFarShown = 0;
+    sharedState.gamePaused = false;
+
+    resetBreakpoints();
+    startSummitSequence._done = false;
+    startSummitCelebration._done = false;
+
+    const fade = document.getElementById("fallFadeOverlay");
+    if (fade) fade.remove();
     const night = document.getElementById("nightOverlay");
     if (night) night.style.opacity = 0;
+    const summit = document.getElementById("summitCelebration");
+    if (summit) summit.classList.add("hidden");
+}
 
-    // Re-init core systems
-    initScene();
-    initHUD();
-    initLevel1(sharedState);
-    initRope(sharedState.scene, climber1Level1, climber2Level1);
-    sharedState.gamePaused = false;
-    lastTime = performance.now();
-    animate();
-
-    // Expose for Game Over (Level 2) reuse
-    window.restartGame = restartGame;
+// Escape / mobile pause: only toggles the pause menu. Ignored while the game is
+// halted for something else (Game Over, Camp Muir, fall reset, summit).
+function togglePause() {
+    const pauseMenuOpen = document.getElementById("pauseMenu").style.display === "flex";
+    if (pauseMenuOpen) resumeGame();
+    else if (!sharedState.gamePaused) pauseGame();
 }
 
 // Ensure buttons are bound (add this block once; avoid duplicates)
@@ -385,11 +429,15 @@ function updateCamera(camera, climber1, climber2) {
 
 document.getElementById("startBtn").addEventListener("click", () => {
   document.getElementById("landingPage").style.display = "none";
+  showMobileControls(true);
   startGame();
 });
 
 
-document.getElementById("resumeBtn").addEventListener("click", resumeGame);
+initMobileControls({
+    onPause: togglePause,
+    onToggleSound: toggleMusic,
+});
 
 // Tract keyboard input
 window.addEventListener("keydown", e => {
@@ -412,21 +460,13 @@ if (!window._ttEscapeBound) {
     window._ttEscapeBound = true;
     document.addEventListener("keydown", (e) => {
         if (e.code === "Escape") {
-            if (sharedState.gamePaused) {
-                resumeGame();
-            } else {
-                pauseGame();
-            }
+            togglePause();
         } else if (e.code === "KeyM") {
             toggleMusic();
         }
     });
 }
 
-document.getElementById("playAgainBtn").onclick = () => {
-  document.getElementById("gameOverScreen").classList.add("hidden");
-  restartGame(); 
-};
 
 document.getElementById("exitBtn").onclick = () => {
   const go = document.getElementById("gameOverScreen");
@@ -517,6 +557,8 @@ export function exitToLanding() {
     if (pause) pause.style.display = "none";
     const overlay = document.getElementById("overlay");
     if (overlay) overlay.classList.add("hidden");
+
+    showMobileControls(false);
 
     // Show landing page and hide HUD
     const landing = document.getElementById("landingPage");

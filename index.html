@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Tether Traverse</title>
   <link rel="stylesheet" href="./css/styles.css" />
   <link href="https://fonts.googleapis.com/css2?family=DynaPuff:wght@400;700&display=swap" rel="stylesheet">
@@ -55,33 +58,31 @@
   <div id="landingPage">
     <div class="landing-content">
       <h1>Tether Traverse</h1>
-      <p>Navigate Mount Rainier terrain with your climbing partner!</p>
+      <p class="tagline">Navigate Mount Rainier terrain with your climbing partner!</p>
 
       <h2>How to Play</h2>
       <div class="controls-section">
         <div class="control-box">
           <h3>Mobile</h3>
-          <p><strong>Movement:</strong> Hold left/right buttons</p>
-          <p><strong>Jump:</strong> Tap jump button</p>
-          <p><strong>Pause:</strong> Double tap screen</p>
-          <p><em>COMING SOON!</em></p>
+          <p><strong>Movement:</strong> Hold ← / → (left thumb)</p>
+          <p><strong>Jump:</strong> Tap ↑ (right thumb)</p>
+          <p><strong>Pause / Sound:</strong> Buttons top-right</p>
+          <p><em>Both climbers move together. Play in landscape!</em></p>
         </div>
 
-        <div class="control-box">
+        <div class="control-box desktop-only">
           <h3>Desktop</h3>
-          <p><strong>Player 1:</strong> Arrow Keys (← →), ↑ to jump</p>
-          <p><strong>Player 2:</strong> A/D keys, W to jump</p>
-          <p><strong>Pause/Resume:</strong> Escape key</p>
-          <p><strong>Sound On/Off:</strong> M key</p>
+          <p><strong>Player 1:</strong> ← → to move, ↑ to jump</p>
+          <p><strong>Player 2:</strong> A / D to move, W to jump</p>
+          <p><strong>Pause:</strong> Esc &nbsp;·&nbsp; <strong>Sound:</strong> M</p>
           <p><em>Control both climbers simultaneously!</em></p>
         </div>
       </div>
 
-      <p><strong>Goal:</strong> Reach the summit at 14,410 feet! Manage your water and snacks wisely.</p>
-      <p><strong>Starting supplies:</strong> 2 liters of water and 1000 calories</p>
+      <p><strong>Goal:</strong> Reach the summit at 14,410 ft! Start with 2 L of water and 1000 calories, so manage them wisely.</p>
 
       <button id="startBtn">Start Climbing!</button>
-      <div id="credit"><p>Built with ♥️ by <a class="maya-portfolio-link" href="https://maya.mcpherson.io" target="_blank">Maya</a></p></div>
+      <div id="credit"><p>Built with <span class="heart">♥︎</span> by <a class="maya-portfolio-link" href="https://maya.mcpherson.io" target="_blank">Maya</a></p></div>
     </div>
   </div>
 
@@ -91,12 +92,19 @@
 
   <!-- Mobile Controls -->
   <div id="mobileControls">
-    <div class="mobile-control-group">
-      <button class="control-btn" id="mobileLeft">←</button>
-      <button class="control-btn" id="mobileJump">↑</button>
-      <button class="control-btn" id="mobileRight">→</button>
+    <div class="mobile-control-group mobile-move">
+      <button class="control-btn" data-dir="left" aria-label="Move left">←</button>
+      <button class="control-btn" data-dir="right" aria-label="Move right">→</button>
+    </div>
+    <div class="mobile-control-group mobile-jump">
+      <button class="control-btn jump-btn" data-dir="jump" aria-label="Jump">↑</button>
     </div>
   </div>
+  <div id="mobileTopBar">
+    <button class="top-btn" id="mobileSoundBtn" aria-label="Toggle sound">🔊</button>
+    <button class="top-btn" id="mobilePauseBtn" aria-label="Pause">⏸</button>
+  </div>
+  <div id="rotateHint">↻ Rotate your phone to landscape for a better view</div>
 
   <!-- Dynamic Overlay for Messages / Transitions -->
   <div id="overlay" class="hidden">

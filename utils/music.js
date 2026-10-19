@@ -3,6 +3,10 @@
 let listener, sound, isPlaying = false;
 
 export function initMusic(camera) {
+    // Starting a new game after Exit must not stack a second copy of the track
+    if (sound && sound.isPlaying) sound.stop();
+    isPlaying = false;
+
     listener = new THREE.AudioListener();
     camera.add(listener);
 

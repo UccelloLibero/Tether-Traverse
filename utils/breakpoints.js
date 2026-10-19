@@ -20,11 +20,28 @@ export const breakpoints = [
 let triggerBreakpoints = new Set();
 
 
-export function handleBreakpoints(climber1, state) {
-  const playerX = climber1.position.x;
+// Height of the checkpoint's platform top (highest platform at that x), or
+// -Infinity if the checkpoint has no platform (e.g. the trailhead).
+export function checkpointHeight(state, x) {
+  let top = -Infinity;
+  for (const p of state.platforms || []) {
+    if (Math.abs(p.x - x) < 0.5) top = Math.max(top, p.y);
+  }
+  return top;
+}
 
+// A checkpoint counts only once it's reached horizontally AND vertically,
+// i.e. you're at (or above) its platform, not walking underneath it.
+export function reachedCheckpoint(climber, state, x) {
+  return (
+    climber.position.x >= x &&
+    climber.position.y >= checkpointHeight(state, x) - 0.05
+  );
+}
+
+export function handleBreakpoints(climber1, state) {
   for (const bp of breakpoints) {
-    if (!triggerBreakpoints.has(bp.x) && playerX >= bp.x) {
+    if (!triggerBreakpoints.has(bp.x) && reachedCheckpoint(climber1, state, bp.x)) {
       triggerBreakpoints.add(bp.x);
 
       state.snacks -= bp.snackUse || 0;

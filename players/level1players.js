@@ -1,5 +1,6 @@
 // import { THREE } from '../utils/three.js';
 import { checkCollision } from "../utils/collision.js";
+import { LEVEL1_GROUND_END_X } from "../utils/platforms.js";
 
 export let climber1, climber2;
 export let climber1Right, climber1Left, climber2Right, climber2Left;
@@ -57,12 +58,12 @@ export function updatePlayerLevel1(state, dt = 0.016) {
     // Collision detection 
     const platformY1 = checkCollision(climber1, state.c1, state.platforms, state);
     if (platformY1 !== null) { state.c1.y = platformY1 + 0.4; state.c1.vy = 0; state.c1.grounded = true; }
-    else if (state.c1.y <= groundY) { state.c1.y = groundY; state.c1.vy = 0; state.c1.grounded = true; }
+    else if (state.c1.y <= groundY && state.c1.x < LEVEL1_GROUND_END_X) { state.c1.y = groundY; state.c1.vy = 0; state.c1.grounded = true; }
     else state.c1.grounded = false;
 
     const platformY2 = checkCollision(climber2, state.c2, state.platforms, state);
     if (platformY2 !== null) { state.c2.y = platformY2 + 0.4; state.c2.vy = 0; state.c2.grounded = true; }
-    else if (state.c2.y <= groundY) { state.c2.y = groundY; state.c2.vy = 0; state.c2.grounded = true; }
+    else if (state.c2.y <= groundY && state.c2.x < LEVEL1_GROUND_END_X) { state.c2.y = groundY; state.c2.vy = 0; state.c2.grounded = true; }
     else state.c2.grounded = false;
 
     // Jump

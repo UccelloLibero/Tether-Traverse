@@ -1,5 +1,11 @@
+// Level 1 has a snowy floor only under the first few steps. Past this x there is
+// nothing below the platforms, so falling off the 5th step onward is fatal.
+export const LEVEL1_GROUND_START_X = -50;
+export const LEVEL1_GROUND_END_X = 25;
+
 export function createGround(scene, platforms) {
-    const geometry = new THREE.BoxGeometry(100, 1, 1, 64, 1, 1);
+    const groundWidth = LEVEL1_GROUND_END_X - LEVEL1_GROUND_START_X;
+    const geometry = new THREE.BoxGeometry(groundWidth, 1, 1, 64, 1, 1);
     const position = geometry.attributes.position;
 
     for (let i = 0; i < position.count; i++) {
@@ -24,6 +30,7 @@ export function createGround(scene, platforms) {
     });
 
     const ground = new THREE.Mesh(geometry, material);
+    ground.position.x = (LEVEL1_GROUND_START_X + LEVEL1_GROUND_END_X) / 2;
     ground.position.y = -5.67;
     scene.add(ground);
 

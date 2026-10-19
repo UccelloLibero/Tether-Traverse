@@ -1,3 +1,5 @@
+import { LEVEL1_GROUND_END_X } from "./platforms.js";
+
 export function checkFall(state, climber1, climber2) {
   // --- Early outs / gating ---
   if (state.gamePaused) return;
@@ -10,18 +12,19 @@ export function checkFall(state, climber1, climber2) {
   )
     return;
 
-  // Update last safe platform from any grounded climber (higher one wins)
+  // Update last safe platform from the climber(s) standing on something.
+  // Only grounded climbers count (never a mid-jump position), and it follows
+  // you down as well as up, so stepping to a lower platform isn't a "fall".
   const c1Grounded = !!state.c1?.grounded;
   const c2Grounded = !!state.c2?.grounded;
   if (c1Grounded || c2Grounded) {
-    const higher =
-      climber1.position.y >= climber2.position.y ? climber1 : climber2;
-    if (
-      !state.lastSafePlatform ||
-      higher.position.y >= state.lastSafePlatform.y - 0.05
-    ) {
-      state.lastSafePlatform = { x: higher.position.x, y: higher.position.y };
+    let safe;
+    if (c1Grounded && c2Grounded) {
+      safe = climber1.position.y >= climber2.position.y ? climber1 : climber2;
+    } else {
+      safe = c1Grounded ? climber1 : climber2;
     }
+    state.lastSafePlatform = { x: safe.position.x, y: safe.position.y };
   }
 
   const minY = Math.min(climber1.position.y, climber2.position.y);
@@ -36,14 +39,24 @@ export function checkFall(state, climber1, climber2) {
   const LEVEL2_DROP_DISTANCE = 6;
   const LEVEL2_VOID_Y = 13; // lowered so actual void is reachable
 
-  // Level 1 soft reset
+  // Level 1: falls are measured vertically from the last platform you stood on.
+  // Over the snowy floor (first 4 steps) you get a soft reset; past it there is
+  // nothing to land on, so the fall is fatal.
   if (
     state.currentLevel === 1 &&
     haveRef &&
     fallDistAvg > LEVEL1_RESET_DISTANCE
   ) {
     state.justResetFall = true;
-    smoothResetToLastPlatform(state, climber1, climber2);
+    const avgX = (climber1.position.x + climber2.position.x) / 2;
+    if (avgX < LEVEL1_GROUND_END_X) {
+      smoothResetToLastPlatform(state, climber1, climber2);
+    } else {
+      triggerGameOver(
+        state,
+        "You slipped off the trail and tumbled down the snowfield. Rope up and try the climb again."
+      );
+    }
     return;
   }
 
@@ -70,8 +83,9 @@ function resetToLastPlatform(state, climber1, climber2) {
   if (!last) return;
 
   // Place climbers slightly above safe platform center
-  climber1.position.set(last.x - 0.5, last.y + 0.8, 0);
-  climber2.position.set(last.x + 0.5, last.y + 0.8, 0);
+  // (climber 2 trails climber 1 on the rope, so it goes on the left)
+  climber1.position.set(last.x + 0.5, last.y + 0.8, 0);
+  climber2.position.set(last.x - 0.5, last.y + 0.8, 0);
 
   // Sync underlying physics state so next frame does not overwrite
   state.c1.x = climber1.position.x;
@@ -117,7 +131,7 @@ function smoothResetToLastPlatform(state, climber1, climber2) {
   }, 1500);
 }
 
-// (Optional: Level 1 fall overlay only)
+// (Level 1 fall overlay only)
 function showFallOverlay(title, message) {
   // Level 2 no longer uses this; keep for Level 1 soft reset feedback if needed.
   const overlay = document.getElementById("fall-overlay");
@@ -149,36 +163,7 @@ function triggerGameOver(state, message = "Game Over") {
   const msgEl = document.getElementById("gameOverMessage");
   if (msgEl) msgEl.textContent = message;
 
-  // Hook buttons (idempotent)
-  const playAgain = document.getElementById("playAgainBtn");
-  if (playAgain && !playAgain._softBound) {
-    playAgain._softBound = true;
-    playAgain.onclick = () => {
-      const screen = document.getElementById("gameOverScreen");
-      if (screen) screen.classList.add("hidden");
-      if (window.restartGame) {
-        window.restartGame();
-      } else {
-        // Fallback if restartGame not yet exposed
-        window.location.reload();
-      }
-    };
-  }
-
-  const exit = document.getElementById("exitBtn");
-  if (exit && !exit._exitBound) {
-    exit._exitBound = true;
-    exit.onclick = () => {
-      // Prefer the central exit handler if available
-      if (window.exitToLanding) {
-        window.exitToLanding();
-      } else {
-        // fallback: show landing/hash + attempt soft restart if available
-        window.location.href = "#landingPage";
-        if (window.restartGame) window.restartGame();
-      }
-    };
-  }
+  // Play Again / Exit buttons are bound once in play/game.js
 }
 
 // Existing fade helpers
