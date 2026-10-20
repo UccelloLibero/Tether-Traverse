@@ -1,11 +1,11 @@
 import { sharedState } from "../play/state.js";
 
-// On-screen buttons steer climber 1. Climber 2 is driven by follow mode
-// (utils/follow.js), retracing climber 1's path at the ideal rope spacing.
+// On-screen buttons steer climber 1. Climber 2 is held at the ideal spacing by
+// follow mode (utils/follow.js); Jump presses both jump keys so they leap together.
 const KEY_MAP = {
   left:  ["ArrowLeft"],
   right: ["ArrowRight"],
-  jump:  ["ArrowUp"],
+  jump:  ["ArrowUp", "KeyW"],
 };
 
 // Phones/tablets start in follow mode. Touching the on-screen controls turns it

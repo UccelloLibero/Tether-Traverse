@@ -1,69 +1,58 @@
-// Mobile follow mode: the player steers climber 1 and climber 2 walks the same
-// route a fixed horizontal distance behind, making each jump from the same spot
-// a moment later, so the pair stays side by side instead of stacking up.
+// Mobile follow mode: the player steers climber 1; climber 2 is roped at a
+// fixed spacing and jumps at the same moment (the jump button presses both
+// players' jump keys). If climber 2 comes up short with nothing to land on
+// (over a gap, or below the next ledge), the rope catches it and hauls it up
+// level with climber 1 until there's ground under it again.
 
-export const FOLLOW_DIST = 2.0; // horizontal gap: middle of the ideal 1–3 m spacing
-const TELEPORT_DIST = 1.5;      // leader moved this far in one frame = reset/level change
-const MIN_STEP = 0.03;          // record a new trail point after this much movement
+import { LEVEL1_GROUND_END_X } from "./platforms.js";
 
-// Leader's recent path, oldest → newest: { x, y, g (grounded) }. x never
-// decreases along the trail (points ahead are dropped when walking back).
-let trail = [];
+export const FOLLOW_DIST = 1.8;  // horizontal gap; with HANG_LIMIT keeps spacing within 1–3 m
+const HANG_LIMIT = 1.5;          // furthest climber 2 can hang below climber 1
+const HAUL_SPEED = 7;            // units/sec climber 2 is pulled up
+const CLIMBER_R = 0.4;           // matches collision.js / player standing offset
 
 export function resetFollowTrail() {
-  trail = [];
+  // Nothing to reset: the follower is positioned fresh every frame.
 }
 
-export function updateFollower(state, climber2) {
+// Highest y a climber could stand at under x, at or below maxY (or -Infinity)
+function standingHeightBelow(state, x, maxY) {
+  let best = -Infinity;
+  for (const p of state.platforms || []) {
+    const standY = p.y + CLIMBER_R;
+    if (standY <= maxY && Math.abs(x - p.mesh.position.x) < p.width / 2 + CLIMBER_R) {
+      best = Math.max(best, standY);
+    }
+  }
+  // Floors that aren't in the platform list
+  if (state.currentLevel === 1 && x < LEVEL1_GROUND_END_X && -4.5 <= maxY) best = Math.max(best, -4.5);
+  if (state.currentLevel === 2 && x < 216 && 20 <= maxY) best = Math.max(best, 20);
+  return best;
+}
+
+export function updateFollower(state, climber2, dt = 0.016) {
   const c1 = state.c1;
   const c2 = state.c2;
 
-  const last = trail[trail.length - 1];
-  if (last && Math.hypot(c1.x - last.x, c1.y - last.y) > TELEPORT_DIST) {
-    trail = []; // fall reset, restart, or new level
+  // Fixed horizontal spacing
+  c2.x = c1.x - FOLLOW_DIST;
+
+  // The rope never lets climber 2 drop more than HANG_LIMIT below climber 1
+  if (c2.y < c1.y - HANG_LIMIT) {
+    c2.y = c1.y - HANG_LIMIT;
+    if (c2.vy < 0) c2.vy = 0;
   }
 
-  if (trail.length === 0) {
-    // Wait until the leader is standing (e.g. after dropping in at level start),
-    // then line the follower up on the same ground. Until then climber 2 just
-    // uses its own physics.
-    if (!c1.grounded) return;
-    trail = [
-      { x: c1.x - FOLLOW_DIST, y: c1.y, g: true },
-      { x: c1.x, y: c1.y, g: true },
-    ];
-  } else {
-    // Walking back left: drop path that is now ahead of the leader
-    while (trail.length > 1 && trail[trail.length - 1].x > c1.x + 0.01) trail.pop();
-
-    const tip = trail[trail.length - 1];
-    if (Math.hypot(c1.x - tip.x, c1.y - tip.y) >= MIN_STEP) {
-      trail.push({ x: c1.x, y: c1.y, g: !!c1.grounded });
+  // Leader standing, follower in the air with nothing within rope reach to land
+  // on: haul it up level with the leader and hold it there
+  if (c1.grounded && !c2.grounded) {
+    const landing = standingHeightBelow(state, c2.x, c2.y + 0.05);
+    if (landing < c1.y - HANG_LIMIT) {
+      c2.y = Math.min(c1.y, c2.y + HAUL_SPEED * dt);
+      c2.vy = 0;
     }
   }
 
-  // Follower stands where the leader was when it was FOLLOW_DIST further left
-  const targetX = c1.x - FOLLOW_DIST;
-  let spot;
-  if (trail[0].x > targetX) {
-    // Leader backed up past the start of the path: extend it on the same ground
-    spot = { x: targetX, y: trail[0].y, g: trail[0].g };
-    trail.unshift({ ...spot });
-  } else {
-    let i = trail.length - 1;
-    while (trail[i].x > targetX) i--;
-    const a = trail[i];
-    const b = trail[i + 1] || a;
-    const t = b.x === a.x ? 1 : (targetX - a.x) / (b.x - a.x);
-    // Same x can appear twice (a jump straight up); take the later point
-    spot = { x: targetX, y: a.y + (b.y - a.y) * t, g: t < 0.5 ? a.g : b.g };
-    if (i > 0) trail.splice(0, i); // forget path the follower has passed
-  }
-
-  c2.x = spot.x;
-  c2.y = spot.y;
-  c2.vy = 0;
-  c2.grounded = spot.g;
-  climber2.position.x = spot.x;
-  climber2.position.y = spot.y;
+  climber2.position.x = c2.x;
+  climber2.position.y = c2.y;
 }

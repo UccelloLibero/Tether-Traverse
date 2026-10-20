@@ -11,7 +11,7 @@ import { climber1 as climber1Level2, climber2 as climber2Level2 } from "../playe
 import { handleBreakpoints, resetBreakpoints, reachedCheckpoint } from "../utils/breakpoints.js";
 import { updatePlayerLevel1 } from "../players/level1players.js";
 import { updatePlayerLevel2 } from "../players/level2players.js";
-import { initRope, updateRope, handleRopePhysics, cleanupRope, resetRopeStats, isJumpStretch } from "../utils/rope.js";
+import { initRope, updateRope, handleRopePhysics, cleanupRope, resetRopeStats } from "../utils/rope.js";
 import { initMusic, toggleMusic, unlockAudio, stopMusic } from "../utils/music.js";
 import { stopSummit } from "../ui/summit.js";
 import { updateNightSky, clearNightSky } from "../ui/nightSky.js";
@@ -173,11 +173,11 @@ function animate() {
     if (sharedState.currentLevel === 1) {
         updateLevel1(sharedState, climber1, dt);
         updatePlayerLevel1(sharedState, dt);
-        if (sharedState.followMode) updateFollower(sharedState, climber2);
+        if (sharedState.followMode) updateFollower(sharedState, climber2, dt);
     } else if (sharedState.currentLevel === 2) {
         updateLevel2(sharedState, climber1, dt);
         updatePlayerLevel2(sharedState, dt);
-        if (sharedState.followMode) updateFollower(sharedState, climber2);
+        if (sharedState.followMode) updateFollower(sharedState, climber2, dt);
 
         updateHeadLampLighting(climber1, climber2, sharedState.isNightClimb, climber1.position.x);
     }
@@ -505,11 +505,8 @@ function updateRopeDistanceUI(c1, c2) {
     sharedState.ropeDistanceLabel.style.left = `${sx}px`;
     sharedState.ropeDistanceLabel.style.top  = `${sy}px`;
 
-    if (isJumpStretch(sharedState)) {
-        // Mobile follow mode mid-jump: the stretch is temporary, so no warning
-        sharedState.ropeDistanceLabel.style.background = "rgba(0,0,0,0.55)";
-    } else if (dist < 1) {
-        // Too close hint
+    // Too close hint
+    if (dist < 1) {
         const now = performance.now();
         if (now - sharedState.lastTooCloseShown > 1400) {
             sharedState.lastTooCloseShown = now;
