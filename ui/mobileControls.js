@@ -66,17 +66,21 @@ export function initMobileControls({ onPause, onToggleSound, onPortraitWhilePlay
   });
 
   const soundBtn = document.getElementById("mobileSoundBtn");
-  soundBtn.addEventListener("click", () => {
-    onToggleSound();
-    const muted = soundBtn.classList.toggle("muted");
-    soundBtn.setAttribute("aria-pressed", String(muted));
-    soundBtn.setAttribute("aria-label", muted ? "Sound off" : "Sound on");
-  });
+  soundBtn.addEventListener("click", () => syncSoundButton(onToggleSound()));
 
   // Don't leave a climber running if the app is backgrounded mid-press
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) releaseMobileKeys();
   });
+}
+
+// Show the real music state (on/off) on the sound button
+export function syncSoundButton(on) {
+  const soundBtn = document.getElementById("mobileSoundBtn");
+  if (!soundBtn) return;
+  soundBtn.classList.toggle("muted", !on);
+  soundBtn.setAttribute("aria-pressed", String(!on));
+  soundBtn.setAttribute("aria-label", on ? "Sound on" : "Sound off");
 }
 
 let labelTimer = null;

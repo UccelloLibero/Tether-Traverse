@@ -1,23 +1,17 @@
-// Mobile follow mode: the player steers climber 1 and climber 2 retraces
-// climber 1's exact path (every step and jump) a fixed distance behind, so the
-// rope team always holds the ideal spacing.
+// Mobile follow mode: the player steers climber 1 and climber 2 walks the same
+// route a fixed horizontal distance behind, making each jump from the same spot
+// a moment later, so the pair stays side by side instead of stacking up.
 
-export const FOLLOW_DIST = 2.0; // middle of the ideal 1–3 m rope spacing
+export const FOLLOW_DIST = 2.0; // horizontal gap: middle of the ideal 1–3 m spacing
 const TELEPORT_DIST = 1.5;      // leader moved this far in one frame = reset/level change
 const MIN_STEP = 0.03;          // record a new trail point after this much movement
 
-// Leader's recent path, oldest → newest: { x, y, g (grounded) }
+// Leader's recent path, oldest → newest: { x, y, g (grounded) }. x never
+// decreases along the trail (points ahead are dropped when walking back).
 let trail = [];
 
 export function resetFollowTrail() {
   trail = [];
-}
-
-function seedTrail(c1) {
-  trail = [
-    { x: c1.x - FOLLOW_DIST, y: c1.y, g: true },
-    { x: c1.x, y: c1.y, g: !!c1.grounded },
-  ];
 }
 
 export function updateFollower(state, climber2) {
@@ -25,12 +19,21 @@ export function updateFollower(state, climber2) {
   const c2 = state.c2;
 
   const last = trail[trail.length - 1];
-  if (!last || Math.hypot(c1.x - last.x, c1.y - last.y) > TELEPORT_DIST) {
-    // Start of a level, a fall reset, or a restart
-    seedTrail(c1);
+  if (last && Math.hypot(c1.x - last.x, c1.y - last.y) > TELEPORT_DIST) {
+    trail = []; // fall reset, restart, or new level
+  }
+
+  if (trail.length === 0) {
+    // Wait until the leader is standing (e.g. after dropping in at level start),
+    // then line the follower up on the same ground. Until then climber 2 just
+    // uses its own physics.
+    if (!c1.grounded) return;
+    trail = [
+      { x: c1.x - FOLLOW_DIST, y: c1.y, g: true },
+      { x: c1.x, y: c1.y, g: true },
+    ];
   } else {
-    // Walking back left: drop path that is now ahead of the leader so the
-    // follower backs up too instead of walking into them
+    // Walking back left: drop path that is now ahead of the leader
     while (trail.length > 1 && trail[trail.length - 1].x > c1.x + 0.01) trail.pop();
 
     const tip = trail[trail.length - 1];
@@ -39,33 +42,22 @@ export function updateFollower(state, climber2) {
     }
   }
 
-  // Walk back along the path from the leader until FOLLOW_DIST is used up
-  let remaining = FOLLOW_DIST;
-  let prev = { x: c1.x, y: c1.y, g: !!c1.grounded };
-  let spot = null;
-  let cutIndex = 0;
-  for (let i = trail.length - 1; i >= 0; i--) {
-    const p = trail[i];
-    const seg = Math.hypot(prev.x - p.x, prev.y - p.y);
-    if (seg >= remaining) {
-      const t = seg === 0 ? 0 : remaining / seg;
-      spot = { x: prev.x + (p.x - prev.x) * t, y: prev.y + (p.y - prev.y) * t, g: p.g && prev.g };
-      cutIndex = i;
-      break;
-    }
-    remaining -= seg;
-    prev = p;
-  }
-
-  if (!spot) {
-    // Path too short (leader backed up past where we started): extend it
-    // straight back from the oldest point
-    const first = trail[0];
-    spot = { x: first.x - remaining, y: first.y, g: first.g };
+  // Follower stands where the leader was when it was FOLLOW_DIST further left
+  const targetX = c1.x - FOLLOW_DIST;
+  let spot;
+  if (trail[0].x > targetX) {
+    // Leader backed up past the start of the path: extend it on the same ground
+    spot = { x: targetX, y: trail[0].y, g: trail[0].g };
     trail.unshift({ ...spot });
-  } else if (cutIndex > 0) {
-    // Forget path the follower has already walked
-    trail.splice(0, cutIndex);
+  } else {
+    let i = trail.length - 1;
+    while (trail[i].x > targetX) i--;
+    const a = trail[i];
+    const b = trail[i + 1] || a;
+    const t = b.x === a.x ? 1 : (targetX - a.x) / (b.x - a.x);
+    // Same x can appear twice (a jump straight up); take the later point
+    spot = { x: targetX, y: a.y + (b.y - a.y) * t, g: t < 0.5 ? a.g : b.g };
+    if (i > 0) trail.splice(0, i); // forget path the follower has passed
   }
 
   c2.x = spot.x;

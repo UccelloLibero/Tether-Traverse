@@ -44,10 +44,24 @@ export function updateRope(climber1, climber2, camera) {
   ropeMesh.geometry = new THREE.TubeGeometry(newCurve, 20, 0.01, 8, false);
 }
 
+// True while the rope is only briefly stretched by a jump in follow mode
+// (mobile): the follower makes the same jump a moment later, so spacing is
+// judged only while both climbers are standing.
+export function isJumpStretch(state) {
+  return !!state.followMode && !(state.c1.grounded && state.c2.grounded);
+}
+
 export function handleRopePhysics(state, climber1, climber2, isMobile, pullStrength, maxRopeLen = maxRopeLength, dt = 0.016) {
   const dx = climber1.position.x - climber2.position.x;
   const dy = climber1.position.y - climber2.position.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
+
+  // Follow mode already holds the spacing; rope pulls here would only drag the
+  // leader out of its jumps
+  if (state.followMode) {
+    if (!isJumpStretch(state)) trackSpacing(dist, dt);
+    return;
+  }
 
   // prevent climber overlap
   if (state.c2.x > state.c1.x - 0.2) {
