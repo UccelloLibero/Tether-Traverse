@@ -121,5 +121,7 @@ export function loadLevel2(scene, platforms) {
     createPlatform(scene, platforms, 442, 57);
     createPlatform(scene, platforms, 448, 58);
     createPlatform(scene, platforms, 454, 59);
-    createPlatform(scene, platforms, 460, 60); // Summit
+    // Summit: long platform so both climbers can stand on top. Its left edge
+    // stays at 457.5 like the other steps, and it extends right to 469.5.
+    createPlatform(scene, platforms, 463.5, 60, 12, 0.5);
 }

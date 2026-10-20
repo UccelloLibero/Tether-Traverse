@@ -2,7 +2,7 @@ import { fadeOutAndPause } from "../play/game.js";
 import { updateHUDStats } from "../ui/hud.js";
 import { startLevel2 } from "../play/game.js";
 import { triggerOverlay } from "../ui/overlays.js";
-import { getRopeSafetyPercent, getRopeStats, maxRopeLength } from "./rope.js";
+import { startSummitSequence } from "../ui/summit.js";
 
 export const breakpoints = [
     { x: 0, name: "Paradise Trailhead", elevation: 5400, waterUse: 0, snackUse: 0 },
@@ -20,12 +20,12 @@ export const breakpoints = [
 let triggerBreakpoints = new Set();
 
 
-// Height of the checkpoint's platform top (highest platform at that x), or
-// -Infinity if the checkpoint has no platform (e.g. the trailhead).
+// Height of the checkpoint's platform top (highest platform spanning that x),
+// or -Infinity if the checkpoint has no platform (e.g. the trailhead).
 export function checkpointHeight(state, x) {
   let top = -Infinity;
   for (const p of state.platforms || []) {
-    if (Math.abs(p.x - x) < 0.5) top = Math.max(top, p.y);
+    if (Math.abs(p.x - x) <= p.width / 2) top = Math.max(top, p.y);
   }
   return top;
 }
@@ -59,27 +59,8 @@ export function handleBreakpoints(climber1, state) {
       }
 
       if (bp.name === "Columbia Crest") {
-        // Only trigger the summit cinematic when we're on Level 2 (so it runs at x=460 on L2)
-        if (state && state.currentLevel === 2) {
-          const percent = getRopeSafetyPercent();
-          // Directly start the cinematic + celebration (startSummitSequence handles camera + celebration)
-          if (window.startSummitSequence) {
-            window.startSummitSequence(percent);
-          } else if (window.startSummitCelebration) {
-            // defensive fallback: DOM-only celebration then exit
-            window.startSummitCelebration(percent);
-            setTimeout(() => {
-              if (window.exitToLanding) window.exitToLanding();
-              else window.location.href = "#landingPage";
-            }, 15000);
-          } else {
-            // last-resort auto-exit after 15s
-            setTimeout(() => {
-              if (window.exitToLanding) window.exitToLanding();
-              else window.location.href = "#landingPage";
-            }, 15000);
-          }
-        }
+        // Summit ending only runs on Level 2
+        if (state.currentLevel === 2) startSummitSequence();
         continue;
       }
 

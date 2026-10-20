@@ -31,4 +31,5 @@ export const sharedState = {
     lastTooFarShown: 0,           // cooldown for "Too far..." hint
     facing: "right", // unified facing direction for both climbers
     level2StartTime: 0, // timestamp when level 2 began
+    followMode: false, // mobile: climber 2 auto-follows climber 1 (set in ui/mobileControls.js)
 };

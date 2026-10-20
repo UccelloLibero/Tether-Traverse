@@ -1,5 +1,6 @@
 // import { THREE } from '../utils/three.js';
 import { checkCollision } from "../utils/collision.js";
+import { getNightAmount } from "../ui/nightSky.js";
 
 export let climber1Right, climber1Left, climber2Right, climber2Left;
 
@@ -115,6 +116,10 @@ export function cleanupPlayersLevel2(scene) {
 }
 
 export function createLevel2Lights(scene, climber1, climber2) {
+    // Called from both initLevel2 and startLevel2; don't stack duplicate lights
+    if (climber1Light) scene.remove(climber1Light);
+    if (climber2Light) scene.remove(climber2Light);
+
     climber1Light = new THREE.PointLight(0x88ffcc, 1.5, 5); // greenish light
     climber2Light = new THREE.PointLight(0xaa88ff, 1.5, 5); // purplish light
 
@@ -125,27 +130,14 @@ export function createLevel2Lights(scene, climber1, climber2) {
     scene.add(climber2Light);
 }
 
-export function updateHeadLampLighting(climber1, climber2, isNightClimb, currentX) {
+export function updateHeadLampLighting(climber1, climber2, isNightClimb) {
     if (!climber1Light || !climber2Light) return;
 
-    const fadeStart = 214;
-    const fadeEnd = 376;
-
-    if (isNightClimb) {
-        if (currentX >= fadeStart && currentX <= fadeEnd) {
-            const progress = (currentX - fadeStart) / (fadeEnd - fadeStart);
-            const newIntensity = Math.max(0, Math.min(1.5, 5 * (1 - progress))); // Fade from 5 to 0
-            climber1Light.intensity = newIntensity;
-            climber2Light.intensity = newIntensity;
-        } 
-        else {
-            climber1Light.intensity = 0;
-            climber2Light.intensity = 0;
-        }
-    } else {
-        climber1Light.intensity = 0; 
-        climber2Light.intensity = 0; 
-    }
+    // Headlamps glow on nearby snow at night and fade out by sunrise,
+    // in step with the night sky overlay (both driven by altitude).
+    const intensity = isNightClimb ? 1.5 * getNightAmount(climber1, climber2) : 0;
+    climber1Light.intensity = intensity;
+    climber2Light.intensity = intensity;
 
     climber1Light.position.set(climber1.position.x, climber1.position.y + 0.5, 1);
     climber2Light.position.set(climber2.position.x, climber2.position.y + 0.5, 1);

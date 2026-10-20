@@ -11,11 +11,13 @@ import { climber1 as climber1Level2, climber2 as climber2Level2 } from "../playe
 import { handleBreakpoints, resetBreakpoints, reachedCheckpoint } from "../utils/breakpoints.js";
 import { updatePlayerLevel1 } from "../players/level1players.js";
 import { updatePlayerLevel2 } from "../players/level2players.js";
-import { initRope, updateRope, handleRopePhysics, getRopeDistanceSamples, cleanupRope } from "../utils/rope.js";
+import { initRope, updateRope, handleRopePhysics, cleanupRope, resetRopeStats } from "../utils/rope.js";
 import { initMusic, toggleMusic } from "../utils/music.js";
-import { startSummitCelebration } from "../ui/overlays.js";
+import { stopSummit } from "../ui/summit.js";
+import { updateNightSky, clearNightSky } from "../ui/nightSky.js";
 import { checkFall } from "../utils/fall.js";
-import { initMobileControls, showMobileControls, releaseMobileKeys, isTouchDevice } from "../ui/mobileControls.js";
+import { initMobileControls, showMobileControls, releaseMobileKeys, isTouchDevice, requestLandscape } from "../ui/mobileControls.js";
+import { updateFollower, resetFollowTrail } from "../utils/follow.js";
 
 
 
@@ -153,11 +155,13 @@ function animate() {
     const dt = Math.min(0.05, (now - lastTime) / 1000); // clamp to avoid huge jumps
     lastTime = now;
 
+    // While paused, leave the last frame on screen (pause menu, fall fade, and
+    // the summit cinematic, which renders on its own).
+    if (sharedState.gamePaused) return;
+
     const renderer = sharedState.renderer; 
     renderer.autoClear = true; // Clear the renderer automatically
     renderer.clear();
-
-    if (sharedState.gamePaused) return;
 
 
     // Pick climbers per level
@@ -169,9 +173,11 @@ function animate() {
     if (sharedState.currentLevel === 1) {
         updateLevel1(sharedState, climber1, dt);
         updatePlayerLevel1(sharedState, dt);
+        if (sharedState.followMode) updateFollower(sharedState, climber2);
     } else if (sharedState.currentLevel === 2) {
         updateLevel2(sharedState, climber1, dt);
         updatePlayerLevel2(sharedState, dt);
+        if (sharedState.followMode) updateFollower(sharedState, climber2);
 
         updateHeadLampLighting(climber1, climber2, sharedState.isNightClimb, climber1.position.x);
     }
@@ -206,22 +212,8 @@ function animate() {
 
     updateGearHUD(sharedState.tools);
 
-    // Sunrise simulation for level 2
-    if (sharedState.currentLevel === 2 && sharedState.isNightClimb) {
-        const fadeStart = 214;
-        const fadeEnd = 376;
-        const currentX = climber1.position.x || 0; // Use climber 1's as main reference or fallback to 0
-
-        if (currentX >= fadeStart && currentX <= fadeEnd) {
-            const progress = (currentX - fadeStart) / (fadeEnd - fadeStart);
-            const newOpacity = 0.5 * (1 - progress); // Fade from 0.5 to 0
-            document.getElementById("nightOverlay").style.opacity = newOpacity;
-        }
-
-        if (currentX > fadeEnd) {
-            document.getElementById("nightOverlay").style.opacity = 0; // Fully transparent after fade
-        }
-    }
+    // Night climb for level 2: headlamp circles that widen into daylight with altitude
+    updateNightSky(sharedState, climber1, climber2);
 
     sharedState.renderer.clearDepth();  // Clears depth between frames
     sharedState.renderer.clear();
@@ -377,15 +369,13 @@ function resetGameState() {
     sharedState.gamePaused = false;
 
     resetBreakpoints();
-    startSummitSequence._done = false;
-    startSummitCelebration._done = false;
+    resetRopeStats();
+    resetFollowTrail();
+    stopSummit();
 
     const fade = document.getElementById("fallFadeOverlay");
     if (fade) fade.remove();
-    const night = document.getElementById("nightOverlay");
-    if (night) night.style.opacity = 0;
-    const summit = document.getElementById("summitCelebration");
-    if (summit) summit.classList.add("hidden");
+    clearNightSky();
 }
 
 // Escape / mobile pause: only toggles the pause menu. Ignored while the game is
@@ -422,13 +412,18 @@ function togglePause() {
 // Camera
 function updateCamera(camera, climber1, climber2) {
     const centerX = (climber1.position.x + climber2.position.x) / 2;
-    const centerY = (climber1.position.y + climber2.position.y) / 2 + 2;
+    // Keep climbers a little below center to show the route above. On short
+    // (phone landscape) screens use a smaller offset so they stay clear of the
+    // thumb controls.
+    const viewHeight = (camera.top - camera.bottom) / camera.zoom;
+    const centerY = (climber1.position.y + climber2.position.y) / 2 + Math.min(2, viewHeight * 0.15);
     camera.position.x += (centerX - camera.position.x) * 0.05; // Smoothly follow climbers
     camera.position.y += (centerY - camera.position.y) * 0.05; // Smoothly follow climbers
 }
 
 document.getElementById("startBtn").addEventListener("click", () => {
   document.getElementById("landingPage").style.display = "none";
+  requestLandscape();
   showMobileControls(true);
   startGame();
 });
@@ -436,12 +431,15 @@ document.getElementById("startBtn").addEventListener("click", () => {
 
 initMobileControls({
     onPause: togglePause,
+    onPortraitWhilePlaying: () => { if (!sharedState.gamePaused) pauseGame(); },
     onToggleSound: toggleMusic,
 });
 
 // Tract keyboard input
 window.addEventListener("keydown", e => {
     sharedState.keys[e.code] = true;
+    // A Player 2 key means two people on a keyboard: stop auto-following
+    if (e.code === "KeyA" || e.code === "KeyD" || e.code === "KeyW") sharedState.followMode = false;
 });
 window.addEventListener("keyup", e => {
     sharedState.keys[e.code] = false;
@@ -547,6 +545,7 @@ function updateRopeDistanceUI(c1, c2) {
 // Expose a unified "exit to instructions" routine so all modules can reuse it.
 // Stops the game, hides HUD/overlays and shows the landing/instructions.
 export function exitToLanding() {
+    stopSummit();
     // Ensure game loop is stopped and scene cleared
     stopGame();
 
@@ -575,97 +574,3 @@ export function exitToLanding() {
 }
 // make callable globally for modules that don't import this file
 window.exitToLanding = exitToLanding;
-
-// New: orchestrate summit sequence (background swap, camera zoom, rope result, celebration, auto-exit)
-export function startSummitSequence(percent = 0) {
-    // guard so cinematic runs once
-    if (startSummitSequence._done) return;
-    startSummitSequence._done = true;
-
-    const state = sharedState;
-    if (!state || !state.scene || !state.camera || !state.renderer) {
-        // fallback: directly show celebration then exit in 10s
-        if (window.startSummitCelebration) window.startSummitCelebration(percent);
-        setTimeout(() => { if (window.exitToLanding) window.exitToLanding(); else window.location.href = "#landingPage"; }, 10000);
-        return;
-    }
-
-    // Pause game physics but we'll render manually during the cinematic
-    state.gamePaused = true;
-
-    // Load summit background for level 2 (defensive)
-    const loader = new THREE.TextureLoader();
-    loader.load("assets/mount-rainier-summit.jpg", tex => {
-        state.scene.background = tex;
-    });
-
-    // Determine camera & target
-    const camera = state.camera;
-    const renderer = state.renderer;
-
-    // Use climber meshes for centering if available
-    const c1 = state.climber1 || null;
-    const c2 = state.climber2 || null;
-    let targetX = camera.position.x;
-    let targetY = camera.position.y;
-    if (c1 && c2 && c1.position && c2.position) {
-        targetX = (c1.position.x + c2.position.x) / 2;
-        targetY = (c1.position.y + c2.position.y) / 2 + 1.2; // slight above players
-    }
-
-    // Animate camera position and zoom over 2s
-    const start = performance.now();
-    const duration = 2000;
-    const startX = camera.position.x;
-    const startY = camera.position.y;
-    const startZoom = camera.zoom || 1;
-    const targetZoom = Math.max(1.5, startZoom * 1.8); // zoom in ~1.5-1.8x
-    function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
-
-    function step(now) {
-        const t = Math.min(1, (now - start) / duration);
-        const e = easeOut(t);
-        camera.position.x = startX + (targetX - startX) * e;
-        camera.position.y = startY + (targetY - startY) * e;
-        camera.zoom = startZoom + (targetZoom - startZoom) * e;
-        camera.updateProjectionMatrix();
-
-        renderer.clear();
-        renderer.render(state.scene, camera);
-
-        if (t < 1) {
-            requestAnimationFrame(step);
-        } else {
-            // After zoom completes, display rope success overlay then start celebration
-            // const overlay = document.getElementById("overlay");
-            // if (overlay) {
-            //     const titleEl = document.getElementById("levelTitle");
-            //     const textEl = document.getElementById("levelText");
-            //     if (titleEl) titleEl.textContent = "Rope Management";
-            //     if (textEl) textEl.textContent = `Rope safety: ${percent}% — Well done!`;
-            //     overlay.classList.remove("hidden");
-            //     // hide continue button for cinematic
-            //     const cont = document.getElementById("continueBtn");
-            //     if (cont) cont.classList.add("hidden");
-            // }
-
-            // Slight delay then show snowflakes (reuse overlays implementation if available)
-            setTimeout(() => {
-                if (window.startSummitCelebration) window.startSummitCelebration(percent);
-                // hide overlay after a short moment so celebration shows unobstructed
-                setTimeout(() => {
-                    const overlay2 = document.getElementById("overlay");
-                    if (overlay2) overlay2.classList.add("hidden");
-                }, 1200);
-            }, 800);
-
-            // After ~10s total, return to landing page
-            setTimeout(() => {
-                if (window.exitToLanding) window.exitToLanding();
-                else window.location.href = "#landingPage";
-            }, 10000);
-        }
-    }
-    requestAnimationFrame(step);
-}
-window.startSummitSequence = startSummitSequence;

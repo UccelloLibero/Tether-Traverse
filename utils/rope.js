@@ -1,21 +1,18 @@
 let ropeMesh;
-// ring buffer of recent distance samples (numbers)
-let ropeDistanceSamples = [];
-const MAX_SAMPLES = 300;
-let lastSampleTime = 0;
-const SAMPLE_INTERVAL_MS = 200; // ~5Hz sampling
+// Seconds spent at each spacing over the WHOLE climb (Level 1 + Level 2).
+// Only counted while the game is running, so pauses/overlays don't skew it.
+let ropeTime = { safe: 0, tooClose: 0, tooFar: 0 };
 
 // thresholds (can be tuned)
 export const MIN_SAFE_DISTANCE = 1.0; // < this => "too close"
 export const maxRopeLength = 3; // Maximum length of the rope (exported)
 // Note: maxRopeLength also exported below for backward compatibility (kept name)
 
-// internal helper to push sample into ring buffer
-function pushSample(dist) {
-  if (ropeDistanceSamples.length >= MAX_SAMPLES) {
-    ropeDistanceSamples.shift();
-  }
-  ropeDistanceSamples.push(dist);
+// Same rule as the on-screen "Too close..." / "Too far..." flags
+function trackSpacing(dist, dt) {
+  if (dist < MIN_SAFE_DISTANCE) ropeTime.tooClose += dt;
+  else if (dist >= maxRopeLength) ropeTime.tooFar += dt;
+  else ropeTime.safe += dt;
 }
 
 export function initRope(scene, climber1, climber2) {
@@ -77,36 +74,33 @@ export function handleRopePhysics(state, climber1, climber2, isMobile, pullStren
     state.c2.x += (dx / dist || 0) * push;
   }
 
-  // Periodic sampling (keeps recent history) for safety stats
-  const now = performance.now();
-  if (now - lastSampleTime >= SAMPLE_INTERVAL_MS) {
-    lastSampleTime = now;
-    pushSample(dist);
-  }
+  trackSpacing(dist, dt);
 }
 
-// Return raw distances (copy)
-export function getRopeDistanceSamples() {
-  return ropeDistanceSamples.slice();
-}
-
-// Return summary stats: counts of safe / too close / too far and total
+// Whole-climb spacing summary: seconds in each zone plus rounded percentages
+// (percentages always add up to 100).
 export function getRopeStats() {
-  const stats = { total: 0, safe: 0, tooClose: 0, tooFar: 0 };
-  for (const d of ropeDistanceSamples) {
-    stats.total++;
-    if (d < MIN_SAFE_DISTANCE) stats.tooClose++;
-    else if (d > maxRopeLength) stats.tooFar++;
-    else stats.safe++;
+  const total = ropeTime.safe + ropeTime.tooClose + ropeTime.tooFar;
+  if (total === 0) {
+    return { total: 0, safe: 0, tooClose: 0, tooFar: 0, safePct: 0, tooClosePct: 0, tooFarPct: 0 };
   }
-  return stats;
+  const tooClosePct = Math.round((ropeTime.tooClose / total) * 100);
+  const tooFarPct = Math.round((ropeTime.tooFar / total) * 100);
+  return {
+    total,
+    ...ropeTime,
+    safePct: 100 - tooClosePct - tooFarPct,
+    tooClosePct,
+    tooFarPct,
+  };
 }
 
-// Safe percentage: proportion of samples that are within [MIN_SAFE_DISTANCE, maxRopeLength]
 export function getRopeSafetyPercent() {
-  const s = getRopeStats();
-  if (s.total === 0) return 0;
-  return Math.round((s.safe / s.total) * 100);
+  return getRopeStats().safePct;
+}
+
+export function resetRopeStats() {
+  ropeTime = { safe: 0, tooClose: 0, tooFar: 0 };
 }
 
 export function cleanupRope(scene) {
@@ -116,7 +110,4 @@ export function cleanupRope(scene) {
         ropeMesh.material.dispose();
         ropeMesh = null;
     }
-
-    ropeDistanceSamples = []; // Clean any collected data for level 2
-    lastSampleTime = 0;
 }
