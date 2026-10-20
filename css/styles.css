@@ -112,8 +112,7 @@ body {
     
     /* Mobile Controls (only shown on touch devices while playing) */
     #mobileControls,
-    #mobileTopBar,
-    #rotateHint {
+    #mobileTopBar {
       display: none;
     }
 
@@ -155,10 +154,14 @@ body {
       touch-action: none;
     }
 
-    .control-btn {
-      width: 72px;
-      height: 72px;
-      font-size: 1.8rem;
+    /* Shared look for every on-screen button: round, white outline, dark glass */
+    .control-btn,
+    .top-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
       border-radius: 50%;
       border: 2px solid rgba(255, 255, 255, 0.8);
       background: rgba(0, 0, 0, 0.35);
@@ -167,46 +170,172 @@ body {
       transition: transform 0.08s, background 0.08s;
     }
 
+    .control-btn {
+      width: 72px;
+      height: 72px;
+    }
+
     .control-btn.jump-btn {
       width: 84px;
       height: 84px;
       background: rgba(160, 63, 164, 0.45);
     }
 
-    .control-btn.pressed {
+    .top-btn {
+      width: 48px;
+      height: 48px;
+    }
+
+    .control-btn.pressed,
+    .top-btn:active {
       background: rgba(255, 255, 255, 0.45);
       transform: scale(0.92);
     }
 
-    .top-btn {
-      width: 44px;
-      height: 44px;
-      font-size: 1.2rem;
+    /* Line icons drawn to match each other */
+    .control-btn svg,
+    .top-btn svg {
+      fill: none;
+      stroke: #fff;
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .control-btn svg { width: 32px; height: 32px; }
+    .control-btn.jump-btn svg { width: 36px; height: 36px; }
+    .top-btn svg { width: 22px; height: 22px; }
+
+    /* Sound: show the speaker-with-waves or the muted speaker */
+    .top-btn .icon-sound-off,
+    .top-btn.muted .icon-sound-on {
+      display: none;
+    }
+
+    .top-btn.muted .icon-sound-off {
+      display: inline;
+    }
+
+    .top-btn.muted {
+      border-color: rgba(255, 255, 255, 0.45);
+    }
+
+    /* Button names, shown for the first few seconds of each climb */
+    .btn-label {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      font-family: "Fira Sans", sans-serif;
+      font-size: 0.7rem;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.6s;
+    }
+
+    /* Bottom controls: put the names above the buttons instead */
+    .control-btn .btn-label,
+    .move-label {
+      top: auto;
+      bottom: calc(100% + 6px);
+    }
+
+    .mobile-move {
+      position: relative;
+    }
+
+    body.show-labels .btn-label {
+      opacity: 1;
+    }
+
+    /* Full screen button: expand icon, or collapse icon while full screen */
+    .top-btn .icon-collapse,
+    body.is-fullscreen .top-btn .icon-expand {
+      display: none;
+    }
+
+    body.is-fullscreen .top-btn .icon-collapse {
+      display: inline;
+    }
+
+    /* Already running as a full-screen home screen app: nothing to expand */
+    body.standalone #mobileFullscreenBtn {
+      display: none;
+    }
+
+    .fullscreen-tip {
+      position: fixed;
+      top: calc(64px + env(safe-area-inset-top));
+      right: calc(10px + env(safe-area-inset-right));
+      max-width: min(300px, calc(100vw - 32px));
+      padding: 10px 14px;
       border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.6);
-      background: rgba(0, 0, 0, 0.45);
-      color: white;
-      padding: 0;
+      background: rgba(10, 6, 18, 0.92);
+      color: #fff;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      z-index: 60;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+      transition: opacity 0.4s;
     }
 
     @media (orientation: portrait) {
-      body.touch.playing #rotateHint {
-        display: block;
+      body.touch:not(.rotate-dismissed) #rotatePrompt {
         position: fixed;
-        left: 50%;
-        bottom: calc(110px + env(safe-area-inset-bottom));
-        transform: translateX(-50%);
-        width: max-content;
-        max-width: calc(100vw - 32px);
-        padding: 8px 14px;
-        border-radius: 8px;
-        background: rgba(0, 0, 0, 0.6);
+        inset: 0;
+        z-index: 2500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        background: linear-gradient(160deg, #050505 0%, #320e3b 50%, #0e3b2f 100%);
         color: #fff;
-        font-size: 0.85rem;
         text-align: center;
-        pointer-events: none;
-        z-index: 40;
       }
+    }
+
+    .rotate-card {
+      max-width: 340px;
+    }
+
+    .rotate-card h2 {
+      font-family: "DynaPuff", cursive;
+      color: rgb(160, 63, 164);
+      font-size: 1.6rem;
+      margin: 0.5rem 0;
+    }
+
+    .rotate-card p {
+      line-height: 1.5;
+      margin: 0 0 1.5rem;
+    }
+
+    .rotate-phone {
+      font-size: 4rem;
+      display: inline-block;
+      animation: rotatePhone 2.4s ease-in-out infinite;
+    }
+
+    @keyframes rotatePhone {
+      0%, 20%   { transform: rotate(0deg); }
+      50%, 80%  { transform: rotate(-90deg); }
+      100%      { transform: rotate(0deg); }
+    }
+
+    #rotateDismiss {
+      background: none;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      color: #ddd;
+      border-radius: 8px;
+      padding: 0.6rem 1rem;
+      min-height: 44px;
+      font-family: "Fira Sans", sans-serif;
+      font-size: 0.9rem;
     }
 
     body.touch #gameCanvas {
@@ -218,6 +347,35 @@ body {
       .landing-content h2 { margin-top: 0.4rem; }
       .control-box p { font-size: 0.85rem; margin: 0.1rem 0; }
       #startBtn { font-size: 1.15rem; padding: 0.5rem 1.5rem; margin-top: 0.5rem; }
+    }
+
+    /* Phone landscape: one-line HUD, slimmer controls, more room for the game */
+    @media (max-height: 500px) {
+      body.touch.playing #mobileControls {
+        padding-bottom: calc(10px + env(safe-area-inset-bottom));
+      }
+
+      .control-btn {
+        width: 62px;
+        height: 62px;
+      }
+
+      .control-btn.jump-btn {
+        width: 74px;
+        height: 74px;
+      }
+
+      #hud {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 2px 12px;
+        max-width: calc(100vw - 210px); /* room for the 3 top-right buttons */
+      }
+
+      #hud .hud-next {
+        display: none;
+      }
     }
 
     /* Small screens: compact HUD and pop-ups */
@@ -259,11 +417,6 @@ body {
         font-size: 1rem;
       }
 
-      body #summitCelebration .celebration-message {
-        font-size: 1.3rem;
-        padding: 0 16px;
-        box-sizing: border-box;
-      }
     }
 
     /* Overlay */
@@ -513,6 +666,158 @@ body {
       z-index: 999;
     }
 
+    /* Summit ending */
+    #summitCelebration .overlay-snowflakes {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .summit-title {
+      position: absolute;
+      top: 14%;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: #fff;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+      animation: popIn 0.8s ease-out;
+      transition: opacity 0.8s;
+    }
+
+    .summit-title span {
+      display: block;
+      font-family: "DynaPuff", cursive;
+      font-size: clamp(2rem, 7vw, 3.5rem);
+    }
+
+    .summit-title small {
+      font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+    }
+
+    .summit-title.fade-out {
+      opacity: 0;
+    }
+
+    .summit-card {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(440px, calc(100vw - 32px));
+      max-height: calc(100vh - 24px);
+      overflow-y: auto;
+      box-sizing: border-box;
+      padding: 1.25rem 1.5rem;
+      background: rgba(10, 6, 18, 0.88);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      color: #fff;
+      text-align: center;
+      pointer-events: auto;
+      animation: popIn 0.6s ease-out;
+    }
+
+    .summit-card h2 {
+      font-family: "DynaPuff", cursive;
+      color: #4cbb17;
+      margin: 0;
+      font-size: 1.6rem;
+    }
+
+    .summit-sub {
+      margin: 0.2rem 0 0.75rem;
+      color: #b8b8d0;
+      font-size: 0.9rem;
+    }
+
+    .summit-score-num {
+      display: block;
+      font-family: "DynaPuff", cursive;
+      font-size: 3rem;
+      line-height: 1;
+      color: #9bc13b;
+    }
+
+    .summit-score-label {
+      font-size: 0.85rem;
+      color: #ddd;
+    }
+
+    .spacing-bar {
+      display: flex;
+      height: 12px;
+      margin: 0.9rem 0 0.5rem;
+      border-radius: 6px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .spacing-bar .seg { height: 100%; }
+    .spacing-bar .seg + .seg { box-shadow: -2px 0 0 rgba(10, 6, 18, 0.88); }
+
+    .summit-card .ideal { background: #9bc13b; }
+    .summit-card .close { background: #c83c3c; }
+    .summit-card .far   { background: #e08a1e; }
+
+    .spacing-legend {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.4rem 1rem;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-size: 0.85rem;
+    }
+
+    .spacing-legend i {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      margin-right: 5px;
+    }
+
+    .summit-not-ideal {
+      margin: 0.5rem 0 0;
+      font-size: 0.85rem;
+      color: #ccc;
+    }
+
+    .summit-rating {
+      margin: 0.75rem 0;
+      font-style: italic;
+    }
+
+    .summit-actions {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+
+    .summit-actions button {
+      font-family: "DynaPuff", cursive;
+      font-size: 1rem;
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      min-height: 44px;
+    }
+
+    #summitPlayAgain { background: rgb(160, 63, 164); color: #000; }
+    #summitPlayAgain:hover { background: #692475; color: #eee; }
+    #summitMenu { background: #4682B4; color: #fff; }
+    #summitMenu:hover { background: #13476f; }
+
+    .summit-thanks {
+      margin: 0.75rem 0 0;
+      font-size: 0.8rem;
+      color: #aaa;
+    }
+
     #credit .heart {
       color: #9bc13b;
       font-family: "Fira Sans", sans-serif;
@@ -539,17 +844,17 @@ body {
       transition: transform 2.5s ease-in-out;
     } */
 
+    /* Level 2 night sky: drawn by ui/nightSky.js. Sits just above the game
+       canvas and below the HUD / controls so those stay readable. */
     #nightOverlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background-color: black;
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
       opacity: 0;
-      transition: opacity 3s ease-in-out;
+      transition: opacity 1.5s ease-in-out;
       pointer-events: none;
-      z-index: 888; 
+      z-index: 5;
     }
 
     .rope-distance-label {

@@ -6,6 +6,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="./manifest.webmanifest" />
   <title>Tether Traverse</title>
   <link rel="stylesheet" href="./css/styles.css" />
   <link href="https://fonts.googleapis.com/css2?family=DynaPuff:wght@400;700&display=swap" rel="stylesheet">
@@ -23,17 +24,6 @@
       font-family:"Fira Sans", sans-serif;
     }
     #summitCelebration.hidden { display:none; }
-    #summitCelebration .celebration-message {
-      position:absolute;
-      top:25%;
-      width:100%;
-      text-align:center;
-      font-size:2rem;
-      font-weight:700;
-      color:#fff;
-      text-shadow:0 0 8px #0af,0 0 16px #09f;
-      animation: popIn 0.8s ease-out;
-    }
     #summitCelebration .snowflake {
       position:absolute;
       top:-5%;
@@ -88,23 +78,33 @@
 
   <!-- Game Canvas -->
   <canvas id="gameCanvas"></canvas>
-  <div id="nightOverlay"></div>
+  <canvas id="nightOverlay"></canvas>
 
   <!-- Mobile Controls -->
   <div id="mobileControls">
     <div class="mobile-control-group mobile-move">
-      <button class="control-btn" data-dir="left" aria-label="Move left">←</button>
-      <button class="control-btn" data-dir="right" aria-label="Move right">→</button>
+      <button class="control-btn" data-dir="left" aria-label="Move left"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+      <button class="control-btn" data-dir="right" aria-label="Move right"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      <span class="btn-label move-label">Move</span>
     </div>
     <div class="mobile-control-group mobile-jump">
-      <button class="control-btn jump-btn" data-dir="jump" aria-label="Jump">↑</button>
+      <button class="control-btn jump-btn" data-dir="jump" aria-label="Jump"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg><span class="btn-label">Jump</span></button>
     </div>
   </div>
   <div id="mobileTopBar">
-    <button class="top-btn" id="mobileSoundBtn" aria-label="Toggle sound">🔊</button>
-    <button class="top-btn" id="mobilePauseBtn" aria-label="Pause">⏸</button>
+    <button class="top-btn" id="mobileFullscreenBtn" aria-label="Full screen"><svg class="icon-expand" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><svg class="icon-collapse" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg><span class="btn-label">Full screen</span></button>
+    <button class="top-btn" id="mobileSoundBtn" aria-label="Sound on" aria-pressed="false"><svg class="icon-sound-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg><svg class="icon-sound-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg><span class="btn-label">Sound</span></button>
+    <button class="top-btn" id="mobilePauseBtn" aria-label="Pause"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg><span class="btn-label">Pause</span></button>
   </div>
-  <div id="rotateHint">↻ Rotate your phone to landscape for a better view</div>
+  <!-- Landscape prompt (touch devices in portrait) -->
+  <div id="rotatePrompt" role="dialog" aria-labelledby="rotateTitle">
+    <div class="rotate-card">
+      <div class="rotate-phone" aria-hidden="true">📱</div>
+      <h2 id="rotateTitle">Turn your phone sideways</h2>
+      <p>Tether Traverse plays best in landscape: more mountain, bigger climbers, thumbs on the controls.</p>
+      <button id="rotateDismiss">Play in portrait anyway</button>
+    </div>
+  </div>
 
   <!-- Dynamic Overlay for Messages / Transitions -->
   <div id="overlay" class="hidden">
@@ -144,7 +144,7 @@
   <div id="hud" class="hidden">
     <div><strong>Elevation:</strong> <span id="currentElevation">5,400 ft</span></div>
     <div><strong>Location:</strong> <span id="currentLocation">Paradise Trailhead</span></div>
-    <div><strong>Next:</strong> <span id="nextLocation">Panorama Point</span></div>
+    <div class="hud-next"><strong>Next:</strong> <span id="nextLocation">Panorama Point</span></div>
     <div><strong>Supplies:</strong>
       <ul>
         <li>💧 <span id="waterCount">2.0</span> L</li>

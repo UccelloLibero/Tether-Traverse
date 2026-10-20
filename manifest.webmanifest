@@ -1,0 +1,9 @@
+{
+  "name": "Tether Traverse",
+  "short_name": "Tether Traverse",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#050505",
+  "theme_color": "#320e3b"
+}
