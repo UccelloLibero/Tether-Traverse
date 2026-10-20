@@ -1,3 +1,4 @@
+import { START_WATER_L, START_CAL, formatWater, formatCal, updateSuppliesHUD } from "../utils/supplies.js";
 
 
 export function initHUD() {
@@ -5,8 +6,8 @@ export function initHUD() {
   document.getElementById("currentElevation").textContent = "5,400 ft";
   document.getElementById("currentLocation").textContent = "Paradise Trailhead";
   document.getElementById("nextLocation").textContent = "Panorama Point";
-  document.getElementById("waterCount").textContent = "2.0";
-  document.getElementById("snacksCount").textContent = "10";
+  document.getElementById("waterCount").textContent = formatWater(START_WATER_L);
+  document.getElementById("snacksCount").textContent = formatCal(START_CAL);
   document.getElementById("toolsList").innerHTML = "";
 }
 
@@ -32,11 +33,10 @@ export function updateGearHUD(tools) {
 
 export function updateHUDStats(state, breakpoint, breakpoints) {
   document.getElementById("currentLocation").textContent = breakpoint.name;
-  document.getElementById("currentElevation").textContent = `${breakpoint.elevation} ft`;
+  document.getElementById("currentElevation").textContent = `${breakpoint.elevation.toLocaleString("en-US")} ft`;
   document.getElementById("nextLocation").textContent =
     breakpoints.find(bp => bp.x > breakpoint.x)?.name || "Summit";
-  document.getElementById("waterCount").textContent = state.water.toFixed(1);
-  document.getElementById("snacksCount").textContent = state.snacks.toFixed(1);
+  updateSuppliesHUD(state);
 }
 
 export function flashScreen() {

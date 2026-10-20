@@ -3,17 +3,20 @@ import { updateHUDStats } from "../ui/hud.js";
 import { startLevel2 } from "../play/game.js";
 import { triggerOverlay } from "../ui/overlays.js";
 import { startSummitSequence } from "../ui/summit.js";
+import { useSupplies } from "./supplies.js";
 
+// Rest stops use water (L) and food (cal). Each level uses 1.25 L / 1,375 cal,
+// so 3 L / 3,000 cal leaves the 0.5 L / 250 cal descent reserve at the summit.
 export const breakpoints = [
     { x: 0, name: "Paradise Trailhead", elevation: 5400, waterUse: 0, snackUse: 0 },
-  { x: 34, name: "Panorama Point", elevation: 6800, waterUse: 0.5, snackUse: 200, message: "Take a break! Tatoosh Range views." },
-  { x: 82, name: "Pebble Creek", elevation: 7200, waterUse: 0.5, snackUse: 200, message: "Rest stop before snowfields." },
-  { x: 142, name: "Muir Snowfield", elevation: 8500, waterUse: 0.5, snackUse: 200, message: "Snow trek begins!" },
+  { x: 34, name: "Panorama Point", elevation: 6800, waterUse: 0.4, snackUse: 450, message: "Take a break! Tatoosh Range views." },
+  { x: 82, name: "Pebble Creek", elevation: 7200, waterUse: 0.4, snackUse: 450, message: "Rest stop before snowfields." },
+  { x: 142, name: "Muir Snowfield", elevation: 8500, waterUse: 0.45, snackUse: 475, message: "Snow trek begins!" },
 //   { x: 214, name: "Camp Muir", elevation: 10080, waterUse: 0.5, snackUse: 2, message: "Camp Muir reached. Prepare for night!", isCamp: true },
-  { x: 229, name: "Cathedral Gap", elevation: 11000, waterUse: 0.5, snackUse: 200, night: true, message: "Cross Cathedral Gap." },
-  { x: 304, name: "Ingraham Flats", elevation: 11500, waterUse: 0.5, snackUse: 200, night: true, message: "Over Ingraham Glacier!" },
-  { x: 376, name: "Disappointment Cleaver", elevation: 12300, waterUse: 0.5, snackUse: 200, night: true, message: "The Cleaver awaits!" },
-  { x: 418, name: "High Break", elevation: 13500, waterUse: 0.5, snackUse: 200, night: true, message: "Final break. And final push to the summit!" },
+  { x: 229, name: "Cathedral Gap", elevation: 11000, waterUse: 0.3, snackUse: 350, night: true, message: "Cross Cathedral Gap." },
+  { x: 304, name: "Ingraham Flats", elevation: 11500, waterUse: 0.3, snackUse: 350, night: true, message: "Over Ingraham Glacier!" },
+  { x: 376, name: "Disappointment Cleaver", elevation: 12300, waterUse: 0.3, snackUse: 350, night: true, message: "The Cleaver awaits!" },
+  { x: 418, name: "High Break", elevation: 13500, waterUse: 0.35, snackUse: 325, night: true, message: "Final break. And final push to the summit!" },
   { x: 460, name: "Columbia Crest", elevation: 14410, waterUse: 0, snackUse: 0, night: true, message: "SUMMIT! You made it!" }
 ];
 
@@ -44,8 +47,7 @@ export function handleBreakpoints(climber1, state) {
     if (!triggerBreakpoints.has(bp.x) && reachedCheckpoint(climber1, state, bp.x)) {
       triggerBreakpoints.add(bp.x);
 
-      state.snacks -= bp.snackUse || 0;
-      state.water -= bp.waterUse || 0;
+      useSupplies(state, bp.waterUse, bp.snackUse);
 
       updateHUDStats(state, bp, breakpoints);
 

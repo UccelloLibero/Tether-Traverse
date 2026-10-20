@@ -1,6 +1,7 @@
 import { sharedState } from "../play/state.js";
 import { getRopeStats, MIN_SAFE_DISTANCE, maxRopeLength } from "../utils/rope.js";
 import { showMobileControls } from "./mobileControls.js";
+import { DESCENT_WATER_L, DESCENT_CAL, formatWater, formatCal } from "../utils/supplies.js";
 
 // Summit ending:
 //   1. Zoom in on the rope team standing on Columbia Crest
@@ -77,6 +78,8 @@ function addSnow(container, total = 50) {
 
 function showResults(container) {
   const s = getRopeStats();
+  const enoughForDescent =
+    sharedState.water >= DESCENT_WATER_L && sharedState.snacks >= DESCENT_CAL;
   const card = document.createElement("div");
   card.className = "summit-card";
   card.innerHTML = `
@@ -103,6 +106,19 @@ function showResults(container) {
     <p class="summit-not-ideal">Not ideal overall: <b>${s.tooClosePct + s.tooFarPct}%</b> of the climb</p>
 
     <p class="summit-rating">${rating(s.safePct)}</p>
+
+    <div class="summit-supplies">
+      <h3>Supplies left for the descent</h3>
+      <p class="summit-supplies-row">
+        <span>💧 <b>${formatWater(sharedState.water)} L</b> water</span>
+        <span>🍎 <b>${formatCal(sharedState.snacks)}</b> cal</span>
+      </p>
+      <p class="summit-supplies-note ${enoughForDescent ? "ok" : "low"}">
+        ${enoughForDescent
+          ? "Enough to get you safely back down to Paradise."
+          : `Running low: you need ${formatWater(DESCENT_WATER_L)} L and ${formatCal(DESCENT_CAL)} cal for the descent.`}
+      </p>
+    </div>
 
     <div class="summit-actions">
       <button id="summitPlayAgain">Climb Again</button>

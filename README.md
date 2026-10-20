@@ -20,9 +20,9 @@ A cooperative platformer built for browser and mobile that simulates the iconic 
 
 ### Goal
 - Reach the summit of **14,410 ft**
-- **Manage resources:** You begin with <mark style="background-color: #d3d3d3;">2 liters of water</mark> and <mark style="background-color: #d3d3d3;">1000 calories</mark>
+- **Manage resources:** You begin with <mark style="background-color: #d3d3d3;">3 liters of water</mark> and <mark style="background-color: #d3d3d3;">3,000 calories</mark>. Each rest stop uses some, leaving 0.5 L and 250 cal for the descent
 - Collect tools like crampons, headlamp, and ice axe along the route
-- **Rope spacing:** Keep climbers 1–3 m apart. Your spacing score is revealed at the summit
+- **Rope spacing:** Mind the slack! Keep climbers 1–3 m apart. Your spacing score is revealed at the summit
 - **Don't fall:** Past the first few steps, a fall is game over
 
 ## Built With

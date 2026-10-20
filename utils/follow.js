@@ -5,6 +5,7 @@
 // level with climber 1 until there's ground under it again.
 
 import { LEVEL1_GROUND_END_X } from "./platforms.js";
+import { FOOT_HALF_WIDTH } from "./collision.js";
 
 export const FOLLOW_DIST = 1.8;  // horizontal gap; with HANG_LIMIT keeps spacing within 1–3 m
 const HANG_LIMIT = 1.5;          // furthest climber 2 can hang below climber 1
@@ -20,7 +21,7 @@ function standingHeightBelow(state, x, maxY) {
   let best = -Infinity;
   for (const p of state.platforms || []) {
     const standY = p.y + CLIMBER_R;
-    if (standY <= maxY && Math.abs(x - p.mesh.position.x) < p.width / 2 + CLIMBER_R) {
+    if (standY <= maxY && Math.abs(x - p.mesh.position.x) < p.width / 2 + FOOT_HALF_WIDTH) {
       best = Math.max(best, standY);
     }
   }

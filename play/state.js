@@ -20,8 +20,8 @@ export const sharedState = {
     },
     isNightClimb: false,
     keys: {},
-    water: 2.0,
-    snacks: Math.floor(1000),
+    water: 3.0,     // liters (see utils/supplies.js)
+    snacks: 3000,   // calories
     justResetFall: false,
     lastSafePlatform: null,   // track last safe landing spot
     skipFrame: false,         // skip heavy physics (rope) for 1 frame after reset

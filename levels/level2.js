@@ -2,6 +2,7 @@ import { animateGearItems, createGear, detectGearPickup } from "../utils/gear.js
 import { createGround, createPlatform } from "../utils/platforms.js";
 import { checkCollision } from "../utils/collision.js";
 import { createCampMuirHut } from "../utils/campMuirHut.js";
+import { updateSuppliesHUD } from "../utils/supplies.js";
 import { climber1, climber2, initPlayersLevel2, updatePlayerLevel2 } from "../players/level2players.js";
 import { updateGearHUD, flashScreen } from "../ui/hud.js";
 import { handleBreakpoints } from "../utils/breakpoints.js";
@@ -43,15 +44,8 @@ export function initLevel2(state) {
     createCampMuirHut(state.scene, 213, 19.75, -2);
     loadLevel2(state.scene, localPlatforms);
 
-    // Ensure HUD shows refreshed supplies (defensive)
-    const wc = document.getElementById("waterCount");
-    if (wc && typeof state.water !== "undefined") wc.textContent = state.water.toFixed(1);
-    const sc = document.getElementById("snacksCount");
-    if (sc && typeof state.snacks !== "undefined") sc.textContent = state.snacks;
-    const camp = document.getElementById("campSupplies");
-    if (camp && typeof state.water !== "undefined" && typeof state.snacks !== "undefined") {
-        camp.textContent = `💧 ${state.water.toFixed(1)} | 🍎 ${state.snacks}`;
-    }
+    // Supplies carry over from Level 1
+    updateSuppliesHUD(state);
 }
 
 export function updateLevel2(state, climber1, dt) {

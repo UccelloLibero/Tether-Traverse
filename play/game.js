@@ -2,7 +2,7 @@ import { createPlatform } from "../utils/platforms.js";
 import { checkCollision } from "../utils/collision.js";
 import { sharedState} from "../play/state.js";
 import { initHUD, updateGearHUD, flashScreen } from "../ui/hud.js";
-import { createGear, detectGearPickup, animateGearItems, gearItems } from "../utils/gear.js";
+import { createGear, detectGearPickup, animateGearItems, gearItems, resetGear } from "../utils/gear.js";
 import { initLevel1, updateLevel1, cleanupLevel1 } from "../levels/level1.js";
 import { initLevel2, updateLevel2, cleanupLevel2 } from "../levels/level2.js";
 import { createLevel2Lights, updateHeadLampLighting } from "../players/level2players.js";
@@ -14,6 +14,7 @@ import { updatePlayerLevel2 } from "../players/level2players.js";
 import { initRope, updateRope, handleRopePhysics, cleanupRope, resetRopeStats } from "../utils/rope.js";
 import { initMusic, toggleMusic, unlockAudio, stopMusic } from "../utils/music.js";
 import { stopSummit } from "../ui/summit.js";
+import { resetSupplies, updateSuppliesHUD } from "../utils/supplies.js";
 import { updateNightSky, clearNightSky } from "../ui/nightSky.js";
 import { checkFall } from "../utils/fall.js";
 import { initMobileControls, showMobileControls, releaseMobileKeys, isTouchDevice, requestLandscape, syncSoundButton } from "../ui/mobileControls.js";
@@ -95,6 +96,7 @@ function fitViewport() {
 // Call after Camp Muir screen
 export function startLevel2() {
     cleanupLevel1(sharedState); // remove Level 1 elements
+    resetGear(); // Level 1 gear left behind shouldn't be collectable on Level 2
     cleanupPlayersLevel1(sharedState.scene); // remove Level 1 climbers
 
     sharedState.c1 = { x: 214, y: 23, vy: 0, grounded: false };
@@ -110,17 +112,8 @@ export function startLevel2() {
     sharedState.keys = {};
     sharedState.tools = []; // Reset tools for Level 2
 
-    // Reset supplies for Level 2
-    sharedState.water = 2.0; // Reset water for Level 2
-    sharedState.snacks = Math.floor(1000); // Reset snacks for Level 2
-
-    // Update HUD (defensive DOM checks)
-    const wc = document.getElementById("waterCount");
-    if (wc) wc.textContent = sharedState.water.toFixed(1);
-    const sc = document.getElementById("snacksCount");
-    if (sc) sc.textContent = sharedState.snacks;
-    const camp = document.getElementById("campSupplies");
-    if (camp) camp.textContent = `💧 ${sharedState.water.toFixed(1)} | 🍎 ${sharedState.snacks}`;
+    // Supplies carry over from Level 1 (no refill at Camp Muir)
+    updateSuppliesHUD(sharedState);
 
     // fadeToLevel2Background("assets/mount-rainier-level2.jpg"); // Fade in new background
 
@@ -353,8 +346,7 @@ function resetGameState() {
     sharedState.c1 = { x: 0, y: 0, vy: 0, grounded: false };
     sharedState.c2 = { x: 0, y: 0, vy: 0, grounded: false };
     sharedState.keys = {};
-    sharedState.water = 2.0;
-    sharedState.snacks = Math.floor(1000);
+    resetSupplies(sharedState);
     sharedState.justResetFall = false;
     sharedState.lastSafePlatform = null;
     sharedState.skipFrame = false;
@@ -371,6 +363,7 @@ function resetGameState() {
     resetBreakpoints();
     resetRopeStats();
     resetFollowTrail();
+    resetGear();
     stopSummit();
 
     const fade = document.getElementById("fallFadeOverlay");

@@ -342,11 +342,21 @@ body {
       touch-action: none;
     }
 
+    /* Phone landscape: shrink the landing page so it fits without scrolling,
+       even with the browser's address bar showing */
     @media (max-height: 520px) {
+      #landingPage { padding: 8px; }
+      .landing-content { padding: 0.6rem 1.1rem 0.4rem; border-radius: 14px; }
+      .landing-content h1 { font-size: clamp(1.3rem, 7vh, 1.8rem); }
       .landing-content > p.tagline { display: none; }
-      .landing-content h2 { margin-top: 0.4rem; }
-      .control-box p { font-size: 0.85rem; margin: 0.1rem 0; }
-      #startBtn { font-size: 1.15rem; padding: 0.5rem 1.5rem; margin-top: 0.5rem; }
+      .landing-content h2 { font-size: 0.9rem; margin: 0.15rem 0 0.35rem; }
+      .controls-section { margin-bottom: 0.4rem; }
+      .control-box { padding: 0.4rem 0.8rem; }
+      .control-box h3 { font-size: 0.9rem; margin: 0 0 0.15rem; }
+      .control-box p { font-size: 0.78rem; line-height: 1.25; margin: 0.05rem 0; }
+      .landing-content > p { font-size: 0.8rem; line-height: 1.3; }
+      #startBtn { font-size: 1rem; padding: 0.4rem 1.3rem; margin-top: 0.4rem; }
+      #credit p { font-size: 0.7rem; margin-top: 0.3rem; }
     }
 
     /* Phone landscape: one-line HUD, slimmer controls, more room for the game */
@@ -670,6 +680,42 @@ body {
       transform: scale(1.1);
     }
 
+    /* Gear pickup: "+ Ice Axe" rises from the item and fades */
+    .gear-pickup {
+      position: fixed;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px 4px 6px;
+      border-radius: 999px;
+      background: rgba(10, 6, 18, 0.75);
+      color: #fff;
+      font-family: "DynaPuff", cursive;
+      font-size: 0.95rem;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 650;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+      animation: gearPickup 1.8s ease-out forwards;
+    }
+
+    .gear-pickup img {
+      width: 22px;
+      height: 22px;
+    }
+
+    .gear-pickup span {
+      color: #9bc13b;
+    }
+
+    @keyframes gearPickup {
+      0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+      15%  { opacity: 1; transform: translate(-50%, -90%) scale(1.08); }
+      30%  { transform: translate(-50%, -110%) scale(1); }
+      75%  { opacity: 1; }
+      100% { opacity: 0; transform: translate(-50%, -260%) scale(0.95); }
+    }
+
     .floatingMessage {
       position: absolute;
       left: 50%;
@@ -809,6 +855,36 @@ body {
       margin: 0.75rem 0;
       font-style: italic;
     }
+
+    .summit-supplies {
+      margin: 0 0 0.85rem;
+      padding: 0.6rem 0.75rem;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .summit-supplies h3 {
+      margin: 0 0 0.3rem;
+      font-family: "DynaPuff", cursive;
+      font-size: 0.95rem;
+      font-weight: normal;
+      color: #b8b8d0;
+    }
+
+    .summit-supplies-row {
+      display: flex;
+      justify-content: center;
+      gap: 1.25rem;
+      margin: 0;
+    }
+
+    .summit-supplies-note {
+      margin: 0.35rem 0 0;
+      font-size: 0.8rem;
+    }
+
+    .summit-supplies-note.ok { color: #9bc13b; }
+    .summit-supplies-note.low { color: #e08a1e; }
 
     .summit-actions {
       display: flex;
