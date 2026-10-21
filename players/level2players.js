@@ -1,6 +1,7 @@
 // import { THREE } from '../utils/three.js';
 import { checkCollision } from "../utils/collision.js";
 import { getNightAmount } from "../ui/nightSky.js";
+import { makeWalkable, RIG_LEVEL2 } from "../utils/walkAnimation.js";
 
 export let climber1Right, climber1Left, climber2Right, climber2Left;
 
@@ -32,6 +33,10 @@ export function initPlayersLevel2(scene) {
     climber2 = new THREE.Mesh(planeGeometry.clone(), climber2Material);
     climber2.position.set(212, 23, 0);
     scene.add(climber2);
+
+    // Bendable sprites for the walk cycle (utils/walkAnimation.js)
+    makeWalkable(climber1, RIG_LEVEL2);
+    makeWalkable(climber2, RIG_LEVEL2);
 }
 
 export function updatePlayerLevel2(state, dt = 0.016) {

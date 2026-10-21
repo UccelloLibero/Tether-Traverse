@@ -1,8 +1,8 @@
 // Mobile follow mode: the player steers climber 1; climber 2 is roped at a
 // fixed spacing and jumps at the same moment (the jump button presses both
-// players' jump keys). If climber 2 comes up short with nothing to land on
-// (over a gap, or below the next ledge), the rope catches it and hauls it up
-// level with climber 1 until there's ground under it again.
+// players' jump keys). Climber 2 lands on any real ground within a normal
+// drop and hops up onto ledges climber 1 is standing on. Only over a gap with
+// nothing safe below does the rope catch it and haul it up level with climber 1.
 
 import { LEVEL1_GROUND_END_X } from "./platforms.js";
 import { FOOT_HALF_WIDTH } from "./collision.js";
@@ -10,6 +10,7 @@ import { FOOT_HALF_WIDTH } from "./collision.js";
 export const FOLLOW_DIST = 1.8;  // horizontal gap; with HANG_LIMIT keeps spacing within 1–3 m
 const HANG_LIMIT = 1.5;          // furthest climber 2 can hang below climber 1
 const HAUL_SPEED = 7;            // units/sec climber 2 is pulled up
+const SAFE_DROP = 3.5;           // ground this far below climber 1 is fine to land on
 const CLIMBER_R = 0.4;           // matches collision.js / player standing offset
 
 export function resetFollowTrail() {
@@ -38,19 +39,30 @@ export function updateFollower(state, climber2, dt = 0.016) {
   // Fixed horizontal spacing
   c2.x = c1.x - FOLLOW_DIST;
 
-  // The rope never lets climber 2 drop more than HANG_LIMIT below climber 1
-  if (c2.y < c1.y - HANG_LIMIT) {
-    c2.y = c1.y - HANG_LIMIT;
-    if (c2.vy < 0) c2.vy = 0;
-  }
+  if (!c2.grounded) {
+    // Is there real ground under the follower within a normal step down?
+    const ground = standingHeightBelow(state, c2.x, c2.y + 0.05);
+    const safeGround = ground >= c1.y - SAFE_DROP;
 
-  // Leader standing, follower in the air with nothing within rope reach to land
-  // on: haul it up level with the leader and hold it there
-  if (c1.grounded && !c2.grounded) {
-    const landing = standingHeightBelow(state, c2.x, c2.y + 0.05);
-    if (landing < c1.y - HANG_LIMIT) {
-      c2.y = Math.min(c1.y, c2.y + HAUL_SPEED * dt);
-      c2.vy = 0;
+    if (!safeGround) {
+      // Nothing safe below (a gap): the rope catches climber 2...
+      if (c2.y < c1.y - HANG_LIMIT) {
+        c2.y = c1.y - HANG_LIMIT;
+        if (c2.vy < 0) c2.vy = 0;
+      }
+      // ...and hauls it up level with climber 1 while climber 1 is standing
+      if (c1.grounded && c2.y < c1.y) {
+        c2.y = Math.min(c1.y, c2.y + HAUL_SPEED * dt);
+        c2.vy = 0;
+      }
+    }
+    // Otherwise let it drop and land on that ground normally
+  } else if (c1.grounded) {
+    // Standing below a ledge that climber 1 is on: hop up onto it
+    const ledge = standingHeightBelow(state, c2.x, c1.y + 0.05);
+    if (ledge > c2.y + 0.3) {
+      c2.vy = state.currentLevel === 2 ? 11 : 12; // same jump as the players
+      c2.grounded = false;
     }
   }
 

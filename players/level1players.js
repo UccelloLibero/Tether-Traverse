@@ -1,6 +1,7 @@
 // import { THREE } from '../utils/three.js';
 import { checkCollision } from "../utils/collision.js";
 import { LEVEL1_GROUND_END_X } from "../utils/platforms.js";
+import { makeWalkable, RIG_LEVEL1 } from "../utils/walkAnimation.js";
 
 export let climber1, climber2;
 export let climber1Right, climber1Left, climber2Right, climber2Left;
@@ -24,6 +25,10 @@ export function initPlayersLevel1(scene) {
     climber2 = new THREE.Mesh(planeGeometry.clone(), climber2Material);
     climber2.position.set(-7.5, -4.75, 0);
     scene.add(climber2);
+
+    // Bendable sprites for the walk cycle (utils/walkAnimation.js)
+    makeWalkable(climber1, RIG_LEVEL1);
+    makeWalkable(climber2, RIG_LEVEL1);
 }
 
 export function updatePlayerLevel1(state, dt = 0.016) {

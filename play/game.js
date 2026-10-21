@@ -19,6 +19,7 @@ import { updateNightSky, clearNightSky } from "../ui/nightSky.js";
 import { checkFall } from "../utils/fall.js";
 import { initMobileControls, showMobileControls, releaseMobileKeys, isTouchDevice, requestLandscape, syncSoundButton } from "../ui/mobileControls.js";
 import { updateFollower, resetFollowTrail } from "../utils/follow.js";
+import { updateWalk } from "../utils/walkAnimation.js";
 
 
 
@@ -174,6 +175,10 @@ function animate() {
 
         updateHeadLampLighting(climber1, climber2, sharedState.isNightClimb, climber1.position.x);
     }
+
+    // Walk cycle: legs step, arms swing, body bobs (utils/walkAnimation.js)
+    updateWalk(climber1, sharedState.c1, dt);
+    updateWalk(climber2, sharedState.c2, dt);
 
     checkFall(sharedState, climber1, climber2);
 
@@ -344,7 +349,7 @@ function resetGameState() {
     sharedState.tools = [];
     sharedState.platforms = [];
     sharedState.c1 = { x: 0, y: 0, vy: 0, grounded: false };
-    sharedState.c2 = { x: 0, y: 0, vy: 0, grounded: false };
+    sharedState.c2 = { x: -2, y: 0, vy: 0, grounded: false }; // start 2 m behind, inside the ideal rope range
     sharedState.keys = {};
     resetSupplies(sharedState);
     sharedState.justResetFall = false;
