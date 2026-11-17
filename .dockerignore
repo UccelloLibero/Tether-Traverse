@@ -1,0 +1,15 @@
+*
+!server.js
+!package.json
+!package-lock.json
+!index.html
+!manifest.webmanifest
+!tether-traverse.png
+!assets/
+!css/
+!levels/
+!play/
+!players/
+!ui/
+!utils/
+**/.DS_Store

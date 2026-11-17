@@ -12,6 +12,13 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Tether Traverse listening on port ${PORT}`);
+});
+
+// As a container's main process, Node ignores SIGTERM unless handled. Busy connections get 5
+// seconds to finish.
+process.on("SIGTERM", () => {
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(0), 5000).unref();
 });
